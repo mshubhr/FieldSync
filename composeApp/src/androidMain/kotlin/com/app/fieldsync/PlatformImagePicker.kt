@@ -8,9 +8,15 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -18,8 +24,7 @@ import java.io.File
 
 @Composable
 actual fun PlatformImagePicker(
-    onImagePicked: (ByteArray?) -> Unit,
-    onDismiss: () -> Unit
+    onImagePicked: (ByteArray?) -> Unit, onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
     var showDialog by remember { mutableStateOf(true) }
@@ -30,7 +35,8 @@ actual fun PlatformImagePicker(
     ) { success ->
         if (success) {
             tempUri?.let { uri ->
-                val bytes = context.contentResolver.openInputStream(uri)?.use { input -> input.readBytes() }
+                val bytes =
+                    context.contentResolver.openInputStream(uri)?.use { input -> input.readBytes() }
                 onImagePicked(bytes)
             }
         }
@@ -41,7 +47,8 @@ actual fun PlatformImagePicker(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         uri?.let {
-            val bytes = context.contentResolver.openInputStream(it)?.use { input -> input.readBytes() }
+            val bytes =
+                context.contentResolver.openInputStream(it)?.use { input -> input.readBytes() }
             onImagePicked(bytes)
         }
         onDismiss()
@@ -52,9 +59,7 @@ actual fun PlatformImagePicker(
             val file = File(context.cacheDir, "images/temp_image_${System.currentTimeMillis()}.jpg")
             file.parentFile?.mkdirs()
             val uri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.provider",
-                file
+                context, "${context.packageName}.provider", file
             )
             tempUri = uri
             cameraLauncher.launch(uri)
@@ -84,25 +89,33 @@ actual fun PlatformImagePicker(
             title = { Text("Select Image Source") },
             text = { Text("Choose between Camera and Gallery") },
             confirmButton = {
-                TextButton(onClick = {
-                    showDialog = false
-                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                        launchCamera()
-                    } else {
-                        permissionLauncher.launch(Manifest.permission.CAMERA)
-                    }
-                }) {
+                TextButton(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Black
+                    ), onClick = {
+                        showDialog = false
+                        if (ContextCompat.checkSelfPermission(
+                                context, Manifest.permission.CAMERA
+                            ) == PackageManager.PERMISSION_GRANTED
+                        ) {
+                            launchCamera()
+                        } else {
+                            permissionLauncher.launch(Manifest.permission.CAMERA)
+                        }
+                    }) {
                     Text("Camera")
                 }
             },
             dismissButton = {
-                TextButton(onClick = {
-                    showDialog = false
-                    galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                }) {
+                TextButton(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Black
+                    ), onClick = {
+                        showDialog = false
+                        galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    }) {
                     Text("Gallery")
                 }
-            }
-        )
+            })
     }
 }
