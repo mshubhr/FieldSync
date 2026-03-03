@@ -1,4 +1,4 @@
-package com.app.fieldsync
+package com.app.fieldsync.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,29 +14,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-
-@Composable
-@Preview
-fun App() {
-    MaterialTheme(
-        colorScheme = lightColorScheme(
-            primary = Color(0xFF2196F3),
-            onPrimary = Color.White,
-            primaryContainer = Color(0xFFE3F2FD),
-            secondary = Color(0xFF00BCD4)
-        )
-    ) {
-        var showSplash by remember { mutableStateOf(true) }
-
-        if (showSplash) {
-            SplashScreen(onSplashFinished = { showSplash = false })
-        } else {
-            MainContent()
-        }
-    }
-}
+import com.app.fieldsync.PlatformImagePicker
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

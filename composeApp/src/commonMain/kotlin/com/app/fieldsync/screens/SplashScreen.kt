@@ -1,4 +1,4 @@
-package com.app.fieldsync
+package com.app.fieldsync.screens
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
