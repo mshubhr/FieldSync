@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -29,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
@@ -69,100 +72,118 @@ fun OnboardingScreen(onOnboardingFinished: () -> Unit) {
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val scope = rememberCoroutineScope()
 
-    Column(
+    Box(
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
     ) {
-        HorizontalPager(
-            state = pagerState, modifier = Modifier.weight(1f).fillMaxWidth()
-        ) { position ->
-            val page = pages[position]
-            Column(
-                modifier = Modifier.fillMaxSize().padding(40.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Surface(
-                    modifier = Modifier.size(200.dp),
-                    shape = RoundedCornerShape(32.dp),
-                    color = page.color.copy(alpha = 0.1f)
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            HorizontalPager(
+                state = pagerState, modifier = Modifier.weight(1f).fillMaxWidth()
+            ) { position ->
+                val page = pages[position]
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(40.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = page.icon,
-                            contentDescription = null,
-                            modifier = Modifier.size(100.dp),
-                            tint = page.color
+                    Surface(
+                        modifier = Modifier.size(200.dp),
+                        shape = RoundedCornerShape(32.dp),
+                        color = page.color.copy(alpha = 0.1f)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = page.icon,
+                                contentDescription = null,
+                                modifier = Modifier.size(100.dp),
+                                tint = page.color
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(40.dp))
+
+                    Text(
+                        text = page.title,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = page.description,
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                        lineHeight = 24.sp
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth().navigationBarsPadding()
+                    .padding(horizontal = 32.dp, vertical = 40.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    repeat(pages.size) { iteration ->
+                        val color = if (pagerState.currentPage == iteration) Color.Black
+                        else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f)
+
+                        Box(
+                            modifier = Modifier.padding(2.dp).clip(CircleShape).background(color)
+                                .size(9.dp)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(40.dp))
-
-                Text(
-                    text = page.title,
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = page.description,
-                    style = MaterialTheme.typography.bodyLarge,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                    lineHeight = 24.sp
-                )
+                Button(
+                    onClick = {
+                        if (pagerState.currentPage < pages.size - 1) {
+                            scope.launch {
+                                pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                            }
+                        } else {
+                            onOnboardingFinished()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+                    shape = RoundedCornerShape(16.dp),
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+                ) {
+                    Text(
+                        text = if (pagerState.currentPage == pages.size - 1) "Get Started" else "Next",
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                    if (pagerState.currentPage < pages.size - 1) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
             }
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 40.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                repeat(pages.size) { iteration ->
-                    val color = if (pagerState.currentPage == iteration) Color.Black
-                    else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f)
-
-                    Box(
-                        modifier = Modifier.padding(2.dp).clip(CircleShape).background(color)
-                            .size(9.dp)
-                    )
-                }
-            }
-
-            Button(
-                onClick = {
-                    if (pagerState.currentPage < pages.size - 1) {
-                        scope.launch {
-                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                        }
-                    } else {
-                        onOnboardingFinished()
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
-                shape = RoundedCornerShape(16.dp),
-                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+        if (pagerState.currentPage < pages.size - 1) {
+            TextButton(
+                onClick = onOnboardingFinished,
+                modifier = Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(16.dp)
             ) {
                 Text(
-                    text = if (pagerState.currentPage == pages.size - 1) "Get Started" else "Next",
-                    style = MaterialTheme.typography.labelLarge
+                    text = "Skip",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                 )
-                if (pagerState.currentPage < pages.size - 1) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
             }
         }
     }

@@ -11,7 +11,8 @@ fun Route.authRoutes() {
     val otpService = OtpService()
 
     post("/send-otp") {
-        otpService.generateOtp(call.receive<SendOtpRequest>().phone)
+        val request = call.receive<SendOtpRequest>()
+        otpService.generateOtp(request.phone)
         call.respond(mapOf("message" to "OTP sent"))
     }
 
