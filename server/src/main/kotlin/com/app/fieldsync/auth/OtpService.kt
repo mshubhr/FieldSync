@@ -7,7 +7,7 @@ class OtpService {
     private val otpStorage = ConcurrentHashMap<String, Pair<String, Long>>()
 
     fun generateOtp(phone: String): String {
-        val otp = Random.nextInt(1000, 9999).toString()
+        val otp = Random.nextInt(100000, 999999).toString()
         otpStorage[phone] = Pair(otp, System.currentTimeMillis())
 
         println("OTP for $phone is $otp")

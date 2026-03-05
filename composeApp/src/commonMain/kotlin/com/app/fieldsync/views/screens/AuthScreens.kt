@@ -1,29 +1,20 @@
-package com.app.fieldsync.screens
+package com.app.fieldsync.views.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -34,90 +25,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-
-data class Country(
-    val name: String, val code: String, val flag: String, val phoneLength: Int
-)
-
-val countries = listOf(
-    Country("United States", "+1", "🇺🇸", 10),
-    Country("United Kingdom", "+44", "🇬🇧", 10),
-    Country("Germany", "+49", "🇩🇪", 10),
-    Country("Australia", "+61", "🇦🇺", 9),
-    Country("Russia", "+7", "🇷🇺", 10),
-    Country("India", "+91", "🇮🇳", 10)
-)
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun PhoneInputField(
-    phoneNumber: String,
-    onPhoneNumberChange: (String) -> Unit,
-    selectedCountry: Country,
-    onCountrySelected: (Country) -> Unit,
-    enabled: Boolean = true
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Row(
-        modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box {
-            OutlinedTextField(
-                value = "${selectedCountry.flag} ${selectedCountry.code}",
-                onValueChange = {},
-                readOnly = true,
-                modifier = Modifier.width(123.dp).clickable(enabled = enabled) { expanded = true },
-                label = { Text("Code") },
-                trailingIcon = {
-                    Icon(
-                        Icons.Default.ArrowDropDown,
-                        contentDescription = null,
-                        modifier = Modifier.clickable(enabled = enabled) { expanded = true })
-                },
-                enabled = enabled
-            )
-
-            DropdownMenu(
-                expanded = expanded, onDismissRequest = { expanded = false }) {
-                countries.forEach { country ->
-                    DropdownMenuItem(
-                        text = { Text("${country.flag} ${country.name} (${country.code})") },
-                        onClick = {
-                            onCountrySelected(country)
-                            expanded = false
-                        })
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        OutlinedTextField(
-            value = phoneNumber,
-            onValueChange = {
-                if (it.length <= selectedCountry.phoneLength && it.all { char -> char.isDigit() }) {
-                    onPhoneNumberChange(it)
-                }
-            },
-            label = { Text("Phone Number") },
-            placeholder = { Text("Enter ${selectedCountry.phoneLength} digits") },
-            modifier = Modifier.weight(1f),
-            leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            singleLine = true,
-            enabled = enabled
-        )
-    }
-}
+import com.app.fieldsync.auth.AuthRepository
+import com.app.fieldsync.views.components.OtpInputField
+import com.app.fieldsync.views.components.PhoneInputField
+import com.app.fieldsync.views.components.countries
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -128,6 +48,11 @@ fun SignInScreen(
     var selectedCountry by remember { mutableStateOf(countries[0]) }
     var otp by remember { mutableStateOf("") }
     var isOtpSent by remember { mutableStateOf(false) }
+
+    val scope = rememberCoroutineScope()
+    val repository = remember { AuthRepository() }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val isPhoneValid = phoneNumber.length == selectedCountry.phoneLength
 
@@ -159,18 +84,28 @@ fun SignInScreen(
                     selectedCountry = it
                     phoneNumber = ""
                 },
-                enabled = !isOtpSent
+                enabled = !isOtpSent && !isLoading
             )
 
             if (isOtpSent) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text = "Enter 6-digit OTP",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OtpInputField(
+                    otp = otp, onOtpChange = { if (it.length <= 6) otp = it }, enabled = !isLoading
+                )
+            }
+
+            if (errorMessage != null) {
                 Spacer(modifier = Modifier.height(16.dp))
-                OutlinedTextField(
-                    value = otp,
-                    onValueChange = { otp = it },
-                    label = { Text("Enter OTP") },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true
+                Text(
+                    text = errorMessage!!,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
 
@@ -179,7 +114,17 @@ fun SignInScreen(
             Button(
                 onClick = {
                     if (!isOtpSent) {
-                        isOtpSent = true
+                        scope.launch {
+                            isLoading = true
+                            errorMessage = null
+                            val result = repository.sendOtp(selectedCountry.code + phoneNumber)
+                            if (result.isSuccess) {
+                                isOtpSent = true
+                            } else {
+                                errorMessage = result.exceptionOrNull()?.message ?: "Failed to send OTP"
+                            }
+                            isLoading = false
+                        }
                     } else {
                         onSignInSuccess()
                     }
@@ -187,9 +132,17 @@ fun SignInScreen(
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = MaterialTheme.shapes.medium,
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
-                enabled = if (!isOtpSent) isPhoneValid else otp.length >= 4
+                enabled = !isLoading && (if (!isOtpSent) isPhoneValid else otp.length == 6)
             ) {
-                Text(if (isOtpSent) "Verify & Sign In" else "Send OTP")
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(if (isOtpSent) "Verify & Sign In" else "Send OTP")
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -212,6 +165,11 @@ fun SignUpScreen(
     var isOtpSent by remember { mutableStateOf(false) }
     var otp by remember { mutableStateOf("") }
 
+    val scope = rememberCoroutineScope()
+    val repository = remember { AuthRepository() }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
     val isPhoneValid = phoneNumber.length == selectedCountry.phoneLength
 
     Scaffold { paddingValues ->
@@ -230,11 +188,15 @@ fun SignUpScreen(
 
             OutlinedTextField(
                 value = fullName,
-                onValueChange = { fullName = it },
+                onValueChange = { newValue ->
+                    if (newValue.all { it.isLetter() || it.isWhitespace() }) {
+                        fullName = newValue
+                    }
+                },
                 label = { Text("Full Name") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                enabled = !isOtpSent
+                enabled = !isOtpSent && !isLoading
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -247,18 +209,28 @@ fun SignUpScreen(
                     selectedCountry = it
                     phoneNumber = ""
                 },
-                enabled = !isOtpSent
+                enabled = !isOtpSent && !isLoading
             )
 
             if (isOtpSent) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text = "Enter 6-digit OTP",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OtpInputField(
+                    otp = otp, onOtpChange = { if (it.length <= 6) otp = it }, enabled = !isLoading
+                )
+            }
+
+            if (errorMessage != null) {
                 Spacer(modifier = Modifier.height(16.dp))
-                OutlinedTextField(
-                    value = otp,
-                    onValueChange = { otp = it },
-                    label = { Text("Enter OTP") },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true
+                Text(
+                    text = errorMessage!!,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
 
@@ -267,7 +239,18 @@ fun SignUpScreen(
             Button(
                 onClick = {
                     if (!isOtpSent) {
-                        isOtpSent = true
+                        scope.launch {
+                            isLoading = true
+                            errorMessage = null
+                            val fullPhone = selectedCountry.code + phoneNumber
+                            val result = repository.sendOtp(fullPhone)
+                            if (result.isSuccess) {
+                                isOtpSent = true
+                            } else {
+                                errorMessage = result.exceptionOrNull()?.message ?: "Failed to send OTP"
+                            }
+                            isLoading = false
+                        }
                     } else {
                         onSignUpSuccess()
                     }
@@ -275,9 +258,17 @@ fun SignUpScreen(
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = MaterialTheme.shapes.medium,
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
-                enabled = if (!isOtpSent) (isPhoneValid && fullName.isNotBlank()) else otp.length >= 4
+                enabled = !isLoading && (if (!isOtpSent) (isPhoneValid && fullName.isNotBlank()) else otp.length == 6)
             ) {
-                Text(if (isOtpSent) "Create Account" else "Send OTP")
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(if (isOtpSent) "Create Account" else "Send OTP")
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))

@@ -1,4 +1,4 @@
-package com.app.fieldsync.navigation
+package com.app.fieldsync.views.navigation
 
 sealed class Screen {
     object Splash : Screen()

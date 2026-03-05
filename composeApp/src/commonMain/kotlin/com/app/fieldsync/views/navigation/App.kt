@@ -1,4 +1,4 @@
-package com.app.fieldsync.navigation
+package com.app.fieldsync.views.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -12,12 +12,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import com.app.fieldsync.screens.OnboardingScreen
-import com.app.fieldsync.screens.SplashScreen
-import com.app.fieldsync.screens.MainContent
-import com.app.fieldsync.screens.ReorderableListScreen
-import com.app.fieldsync.screens.SignInScreen
-import com.app.fieldsync.screens.SignUpScreen
+import com.app.fieldsync.views.screens.OnboardingScreen
+import com.app.fieldsync.views.screens.SplashScreen
+import com.app.fieldsync.views.screens.MainContent
+import com.app.fieldsync.views.screens.ReorderableListScreen
+import com.app.fieldsync.views.screens.SignInScreen
+import com.app.fieldsync.views.screens.SignUpScreen
 
 @Composable
 @Preview

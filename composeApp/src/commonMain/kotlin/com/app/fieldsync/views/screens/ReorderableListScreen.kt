@@ -1,4 +1,4 @@
-package com.app.fieldsync.screens
+package com.app.fieldsync.views.screens
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 
@@ -124,7 +125,7 @@ fun ReorderableListScreen() {
                         Text(
                             text = item,
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = if (isDragging) androidx.compose.ui.text.font.FontWeight.Bold else null
+                            fontWeight = if (isDragging) FontWeight.Bold else null
                         )
                         Icon(
                             imageVector = Icons.Default.Reorder,

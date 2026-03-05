@@ -1,4 +1,4 @@
-package com.app.fieldsync.screens
+package com.app.fieldsync.views.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape

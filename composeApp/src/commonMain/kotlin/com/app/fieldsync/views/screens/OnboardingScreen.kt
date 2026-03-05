@@ -1,4 +1,4 @@
-package com.app.fieldsync.screens
+package com.app.fieldsync.views.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

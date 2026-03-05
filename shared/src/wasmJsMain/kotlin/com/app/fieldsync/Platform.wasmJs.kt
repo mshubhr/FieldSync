@@ -1,7 +1,7 @@
 package com.app.fieldsync
 
-class WasmPlatform: Platform {
-    override val name: String = "Web with Kotlin/Wasm"
+class WasmJsPlatform : Platform {
+    override val name: String = "Web (Wasm)"
 }
 
-actual fun getPlatform(): Platform = WasmPlatform()
+actual fun getPlatform(): Platform = WasmJsPlatform()
