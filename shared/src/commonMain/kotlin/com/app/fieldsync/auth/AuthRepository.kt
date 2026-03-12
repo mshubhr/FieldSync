@@ -2,6 +2,8 @@ package com.app.fieldsync.auth
 
 import com.app.fieldsync.SERVER_PORT
 import com.app.fieldsync.getPlatform
+import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.auth.auth
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -14,6 +16,8 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
 class AuthRepository {
+    private val auth = Firebase.auth
+
     private val client = HttpClient {
         install(ContentNegotiation) {
             json(Json {
@@ -70,5 +74,13 @@ class AuthRepository {
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    suspend fun signUp(email: String, password: String) {
+        auth.createUserWithEmailAndPassword(email, password)
+    }
+
+    suspend fun verifyPhone(phoneNumber: String) {
+//        auth.verifyPhoneNumber(phoneNumber)
     }
 }
