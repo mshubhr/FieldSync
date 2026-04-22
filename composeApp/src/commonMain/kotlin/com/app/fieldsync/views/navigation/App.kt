@@ -12,12 +12,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import com.app.fieldsync.views.screens.OnboardingScreen
-import com.app.fieldsync.views.screens.SplashScreen
 import com.app.fieldsync.views.screens.MainContent
-import com.app.fieldsync.views.screens.ReorderableListScreen
+import com.app.fieldsync.views.screens.OnboardingScreen
 import com.app.fieldsync.views.screens.SignInScreen
 import com.app.fieldsync.views.screens.SignUpScreen
+import com.app.fieldsync.views.screens.SplashScreen
 
 @Composable
 @Preview
@@ -45,14 +44,12 @@ fun App() {
                 })
 
                 Screen.SignIn -> SignInScreen(onSignInSuccess = {
-                    currentScreen = Screen.ReorderableList
+                    currentScreen = Screen.Main
                 }, onNavigateToSignUp = { currentScreen = Screen.SignUp })
 
                 Screen.SignUp -> SignUpScreen(onSignUpSuccess = {
-                    currentScreen = Screen.ReorderableList
+                    currentScreen = Screen.Main
                 }, onNavigateToSignIn = { currentScreen = Screen.SignIn })
-
-                Screen.ReorderableList -> ReorderableListScreen()
 
                 Screen.Main -> MainContent()
             }

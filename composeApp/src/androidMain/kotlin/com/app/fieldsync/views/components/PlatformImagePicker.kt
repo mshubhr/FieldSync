@@ -1,4 +1,4 @@
-package com.app.fieldsync
+package com.app.fieldsync.views.components
 
 import android.Manifest
 import android.content.pm.PackageManager

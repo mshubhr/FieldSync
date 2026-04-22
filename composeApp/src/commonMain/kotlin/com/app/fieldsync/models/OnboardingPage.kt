@@ -1,4 +1,4 @@
-package com.app.fieldsync.model
+package com.app.fieldsync.models
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector

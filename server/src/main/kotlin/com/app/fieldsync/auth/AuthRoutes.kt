@@ -1,5 +1,7 @@
 package com.app.fieldsync.auth
 
+import com.app.fieldsync.config.TwilioOtpService
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -8,12 +10,14 @@ import io.ktor.server.routing.post
 fun Route.authRoutes() {
 
     val users = mutableListOf<User>()
-    val otpService = OtpService()
+    val otpService = TwilioOtpService()
 
     post("/send-otp") {
-        val phone = call.receive<SendOtpRequest>().phone
-        val otp = otpService.generateOtp(phone)
-        call.respond(mapOf("message" to "OTP sent", "otp" to otp))
+        if (otpService.generateOtp(call.receive<SendOtpRequest>().phone)) {
+            call.respond(mapOf("message" to "OTP sent"))
+        } else {
+            call.respond(HttpStatusCode.BadRequest, "Failed to send OTP")
+        }
     }
 
     post("/verify-otp") {

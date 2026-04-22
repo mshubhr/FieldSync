@@ -1,4 +1,4 @@
-package com.app.fieldsync
+package com.app.fieldsync.views.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect

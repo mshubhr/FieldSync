@@ -25,7 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.app.fieldsync.model.Country
+import com.app.fieldsync.models.Country
 
 val countries = listOf(
     Country("United States", "+1", "🇺🇸", 10),

@@ -1,4 +1,4 @@
-package com.app.fieldsync
+package com.app.fieldsync.views.components
 
 import androidx.compose.runtime.Composable
 
@@ -7,6 +7,5 @@ actual fun PlatformImagePicker(
     onImagePicked: (ByteArray?) -> Unit,
     onDismiss: () -> Unit
 ) {
-    // TODO: Implement file picker for JVM (Desktop)
     onDismiss()
 }

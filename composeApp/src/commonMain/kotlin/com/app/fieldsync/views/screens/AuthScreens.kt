@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.app.fieldsync.auth.AuthRepository
+import com.app.fieldsync.getPlatform
 import com.app.fieldsync.views.components.OtpInputField
 import com.app.fieldsync.views.components.PhoneInputField
 import com.app.fieldsync.views.components.countries
@@ -48,6 +49,7 @@ fun SignInScreen(
     var selectedCountry by remember { mutableStateOf(countries[0]) }
     var otp by remember { mutableStateOf("") }
     var isOtpSent by remember { mutableStateOf(false) }
+    val platform = remember { getPlatform() }
 
     val scope = rememberCoroutineScope()
     val repository = remember { AuthRepository() }
@@ -113,11 +115,12 @@ fun SignInScreen(
 
             Button(
                 onClick = {
+                    val fullPhone = selectedCountry.code + phoneNumber
                     if (!isOtpSent) {
                         scope.launch {
                             isLoading = true
                             errorMessage = null
-                            val result = repository.sendOtp(selectedCountry.code + phoneNumber)
+                            val result = repository.sendOtp(fullPhone)
                             if (result.isSuccess) {
                                 isOtpSent = true
                             } else {
@@ -126,7 +129,24 @@ fun SignInScreen(
                             isLoading = false
                         }
                     } else {
-                        onSignInSuccess()
+                        scope.launch {
+                            isLoading = true
+                            errorMessage = null
+                            val result = repository.verifyOtp(
+                                phone = fullPhone,
+                                otp = otp,
+                                name = "",
+                                deviceId = platform.deviceId,
+                                deviceName = platform.deviceName,
+                                platform = platform.name
+                            )
+                            if (result.isSuccess) {
+                                onSignInSuccess()
+                            } else {
+                                errorMessage = result.exceptionOrNull()?.message ?: "Invalid OTP"
+                            }
+                            isLoading = false
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -164,6 +184,7 @@ fun SignUpScreen(
     var selectedCountry by remember { mutableStateOf(countries[0]) }
     var isOtpSent by remember { mutableStateOf(false) }
     var otp by remember { mutableStateOf("") }
+    val platform = remember { getPlatform() }
 
     val scope = rememberCoroutineScope()
     val repository = remember { AuthRepository() }
@@ -238,11 +259,11 @@ fun SignUpScreen(
 
             Button(
                 onClick = {
+                    val fullPhone = selectedCountry.code + phoneNumber
                     if (!isOtpSent) {
                         scope.launch {
                             isLoading = true
                             errorMessage = null
-                            val fullPhone = selectedCountry.code + phoneNumber
                             val result = repository.sendOtp(fullPhone)
                             if (result.isSuccess) {
                                 isOtpSent = true
@@ -252,7 +273,24 @@ fun SignUpScreen(
                             isLoading = false
                         }
                     } else {
-                        onSignUpSuccess()
+                        scope.launch {
+                            isLoading = true
+                            errorMessage = null
+                            val result = repository.verifyOtp(
+                                phone = fullPhone,
+                                otp = otp,
+                                name = fullName,
+                                deviceId = platform.deviceId,
+                                deviceName = platform.deviceName,
+                                platform = platform.name
+                            )
+                            if (result.isSuccess) {
+                                onSignUpSuccess()
+                            } else {
+                                errorMessage = result.exceptionOrNull()?.message ?: "Invalid OTP"
+                            }
+                            isLoading = false
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
