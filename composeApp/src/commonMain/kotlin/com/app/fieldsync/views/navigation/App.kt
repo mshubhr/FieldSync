@@ -17,10 +17,14 @@ import com.app.fieldsync.views.screens.OnboardingScreen
 import com.app.fieldsync.views.screens.SignInScreen
 import com.app.fieldsync.views.screens.SignUpScreen
 import com.app.fieldsync.views.screens.SplashScreen
+import com.russhwolf.settings.Settings
 
 @Composable
 @Preview
 fun App() {
+    val settings = remember { Settings() }
+    val hasSeenSplash = remember { settings.getBoolean("has_seen_splash", false) }
+    
     MaterialTheme(
         colorScheme = lightColorScheme(
             primary = Color.Black,
@@ -32,10 +36,13 @@ fun App() {
         Surface(
             modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
         ) {
-            var currentScreen by remember { mutableStateOf<Screen>(Screen.Splash) }
+            var currentScreen by remember { 
+                mutableStateOf(if (hasSeenSplash) Screen.SignIn else Screen.Splash)
+            }
 
             when (currentScreen) {
                 Screen.Splash -> SplashScreen(onSplashFinished = {
+                    settings.putBoolean("has_seen_splash", true)
                     currentScreen = Screen.Onboarding
                 })
 
