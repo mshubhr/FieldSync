@@ -12,6 +12,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import com.app.fieldsync.db.DatabaseDriverFactory
+import com.app.fieldsync.db.FieldSyncDatabase
+import com.app.fieldsync.reports.LocalReportDataSource
+import com.app.fieldsync.reports.ReportRepository
 import com.app.fieldsync.views.screens.MainContent
 import com.app.fieldsync.views.screens.OnboardingScreen
 import com.app.fieldsync.views.screens.SignInScreen
@@ -21,10 +25,18 @@ import com.russhwolf.settings.Settings
 
 @Composable
 @Preview
-fun App() {
+fun App(databaseDriverFactory: DatabaseDriverFactory? = null) {
     val settings = remember { Settings() }
     val hasSeenSplash = remember { settings.getBoolean("has_seen_splash", false) }
-    
+    val isLoggedIn = remember { settings.getBoolean("is_logged_in", false) }
+    var userName by remember { mutableStateOf(settings.getString("user_name", "User")) }
+
+    val reportRepository = remember {
+        val driver = databaseDriverFactory?.createDriver()
+        val localDataSource = driver?.let { LocalReportDataSource(FieldSyncDatabase(it)) }
+        ReportRepository(localDataSource)
+    }
+
     MaterialTheme(
         colorScheme = lightColorScheme(
             primary = Color.Black,
@@ -36,8 +48,14 @@ fun App() {
         Surface(
             modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
         ) {
-            var currentScreen by remember { 
-                mutableStateOf(if (hasSeenSplash) Screen.SignIn else Screen.Splash)
+            var currentScreen by remember {
+                mutableStateOf(
+                    when {
+                        !hasSeenSplash -> Screen.Splash
+                        isLoggedIn -> Screen.Main
+                        else -> Screen.SignIn
+                    }
+                )
             }
 
             when (currentScreen) {
@@ -50,15 +68,25 @@ fun App() {
                     currentScreen = Screen.SignIn
                 })
 
-                Screen.SignIn -> SignInScreen(onSignInSuccess = {
+                Screen.SignIn -> SignInScreen(onSignInSuccess = { name ->
+                    userName = name
+                    settings.putString("user_name", name)
+                    settings.putBoolean("is_logged_in", true)
                     currentScreen = Screen.Main
                 }, onNavigateToSignUp = { currentScreen = Screen.SignUp })
 
-                Screen.SignUp -> SignUpScreen(onSignUpSuccess = {
+                Screen.SignUp -> SignUpScreen(onSignUpSuccess = { name ->
+                    userName = name
+                    settings.putString("user_name", name)
+                    settings.putBoolean("is_logged_in", true)
                     currentScreen = Screen.Main
                 }, onNavigateToSignIn = { currentScreen = Screen.SignIn })
 
-                Screen.Main -> MainContent()
+                Screen.Main -> MainContent(
+                    userName = userName, reportRepository = reportRepository, onLogout = {
+                        settings.putBoolean("is_logged_in", false)
+                        currentScreen = Screen.SignIn
+                    })
             }
         }
     }

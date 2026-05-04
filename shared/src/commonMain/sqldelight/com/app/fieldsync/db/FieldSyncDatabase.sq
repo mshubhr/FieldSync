@@ -1,0 +1,27 @@
+CREATE TABLE ReportEntity (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    category TEXT NOT NULL,
+    note TEXT NOT NULL,
+    imageBase64 TEXT NOT NULL,
+    timestamp INTEGER NOT NULL,
+    isSynced INTEGER NOT NULL DEFAULT 0
+);
+
+insertReport:
+INSERT INTO ReportEntity(category, note, imageBase64, timestamp, isSynced)
+VALUES (?, ?, ?, ?, ?);
+
+lastInsertId:
+SELECT last_insert_rowid();
+
+getAllReports:
+SELECT * FROM ReportEntity ORDER BY timestamp DESC;
+
+getUnsyncedReports:
+SELECT * FROM ReportEntity WHERE isSynced = 0;
+
+markAsSynced:
+UPDATE ReportEntity SET isSynced = 1 WHERE id = ?;
+
+deleteReport:
+DELETE FROM ReportEntity WHERE id = ?;

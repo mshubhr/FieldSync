@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.app.fieldsync.models.RamEntry
+import kotlinx.datetime.number
 
 @Composable
 fun HistoryChart(
@@ -114,7 +115,7 @@ fun HistoryChart(
             ) {
                 if (entries.isNotEmpty()) {
                     Text(
-                        text = "${entries.first().date.dayOfMonth}/${entries.first().date.monthNumber}",
+                        text = "${entries.first().date.day}/${entries.first().date.month.number}",
                         fontSize = 10.sp,
                         color = Color.Gray
                     )
@@ -122,14 +123,14 @@ fun HistoryChart(
                         val midIndex = entries.size / 2
                         val midEntry = entries[midIndex]
                         Text(
-                            text = "${midEntry.date.dayOfMonth}/${midEntry.date.monthNumber}",
+                            text = "${midEntry.date.day}/${midEntry.date.month.number}",
                             fontSize = 10.sp,
                             color = Color.Gray
                         )
                     }
                     if (entries.size > 1) {
                         Text(
-                            text = "${entries.last().date.dayOfMonth}/${entries.last().date.monthNumber}",
+                            text = "${entries.last().date.day}/${entries.last().date.month.number}",
                             fontSize = 10.sp,
                             color = Color.Gray
                         )

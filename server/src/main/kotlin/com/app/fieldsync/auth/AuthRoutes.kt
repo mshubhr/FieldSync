@@ -13,7 +13,15 @@ fun Route.authRoutes() {
     val otpService = TwilioOtpService()
 
     post("/send-otp") {
-        if (otpService.generateOtp(call.receive<SendOtpRequest>().phone)) {
+        val request = call.receive<SendOtpRequest>()
+        val checkAvailability = call.parameters["checkAvailability"]?.toBoolean() ?: false
+
+        if (checkAvailability && users.none { it.phone == request.phone }) {
+            call.respond(HttpStatusCode.NotFound, "User not found. Please sign up.")
+            return@post
+        }
+
+        if (otpService.generateOtp(request.phone)) {
             call.respond(mapOf("message" to "OTP sent"))
         } else {
             call.respond(HttpStatusCode.BadRequest, "Failed to send OTP")
@@ -31,6 +39,10 @@ fun Route.authRoutes() {
         var user = users.find { it.phone == request.phone }
 
         if (user == null) {
+            if (request.name.isBlank()) {
+                call.respond(HttpStatusCode.NotFound, "User not found. Please sign up.")
+                return@post
+            }
             user = User(
                 id = users.size + 1, phone = request.phone, name = request.name
             )
@@ -45,6 +57,6 @@ fun Route.authRoutes() {
             )
         )
 
-        call.respond(AuthResponse(JwtService().generateToken(user.phone)))
+        call.respond(AuthResponse(JwtService().generateToken(user.phone), user.name))
     }
 }

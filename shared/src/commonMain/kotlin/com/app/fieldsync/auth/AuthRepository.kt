@@ -33,16 +33,20 @@ class AuthRepository {
             }
         }
 
-    suspend fun sendOtp(phone: String): Result<String> {
+    suspend fun sendOtp(phone: String, checkAvailability: Boolean = false): Result<String> {
         return try {
             val response = client.post("$baseUrl/send-otp") {
+                url {
+                    parameters.append("checkAvailability", checkAvailability.toString())
+                }
                 contentType(ContentType.Application.Json)
                 setBody(SendOtpRequest(phone))
             }
             if (response.status == HttpStatusCode.OK) {
                 Result.success("OTP sent")
             } else {
-                Result.failure(Exception("Failed to send OTP: ${response.status}"))
+                val error = try { response.body<String>() } catch (_: Exception) { "Failed to send OTP: ${response.status}" }
+                Result.failure(Exception(error))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -65,7 +69,8 @@ class AuthRepository {
             if (response.status == HttpStatusCode.OK) {
                 Result.success(response.body())
             } else {
-                Result.failure(Exception("Verification failed: ${response.status}"))
+                val error = try { response.body<String>() } catch (_: Exception) { "Verification failed: ${response.status}" }
+                Result.failure(Exception(error))
             }
         } catch (e: Exception) {
             Result.failure(e)

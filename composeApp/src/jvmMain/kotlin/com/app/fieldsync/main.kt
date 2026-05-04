@@ -2,6 +2,7 @@ package com.app.fieldsync
 
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import com.app.fieldsync.db.JvmDatabaseDriverFactory
 import com.app.fieldsync.views.navigation.App
 
 fun main() = application {
@@ -9,6 +10,6 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         title = "FieldSync",
     ) {
-        App()
+        App(JvmDatabaseDriverFactory())
     }
 }

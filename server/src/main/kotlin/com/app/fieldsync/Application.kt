@@ -1,6 +1,7 @@
 package com.app.fieldsync
 
 import com.app.fieldsync.auth.authRoutes
+import com.app.fieldsync.reports.reportRoutes
 import com.app.fieldsync.config.TwilioConfig
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
@@ -30,5 +31,6 @@ fun Application.module() {
             call.respond(mapOf("status" to "FieldSync backend running"))
         }
         authRoutes()
+        reportRoutes()
     }
 }

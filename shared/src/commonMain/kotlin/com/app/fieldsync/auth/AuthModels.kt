@@ -32,5 +32,6 @@ data class VerifyOtpRequest(
 
 @Serializable
 data class AuthResponse(
-    val token: String
+    val token: String,
+    val name: String
 )

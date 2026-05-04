@@ -6,7 +6,7 @@ import com.app.fieldsync.views.navigation.App
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
-    ComposeViewport {
-        App()
+    ComposeViewport(viewportContainerId = "compose-receiver") {
+        App(null)
     }
 }

@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import com.app.fieldsync.db.AndroidDatabaseDriverFactory
 import com.app.fieldsync.views.navigation.App
 
 class MainActivity : ComponentActivity() {
@@ -13,8 +14,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
+        val databaseDriverFactory = AndroidDatabaseDriverFactory(this)
+
         setContent {
-            App()
+            App(databaseDriverFactory)
         }
     }
 }
