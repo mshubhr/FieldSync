@@ -16,6 +16,6 @@ class ApplicationTest {
         }
         val response = client.get("/")
         assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals("Ktor: ", response.bodyAsText())
+        assertEquals("{\"status\":\"FieldSync backend running\"}", response.bodyAsText().trim())
     }
 }
