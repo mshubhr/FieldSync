@@ -50,6 +50,9 @@ kotlin {
             implementation(libs.ktor.client.darwin)
             implementation(libs.sqldelight.native.driver)
         }
+        jsMain.dependencies {
+            implementation(libs.web.worker.driver)
+        }
     }
 }
 
