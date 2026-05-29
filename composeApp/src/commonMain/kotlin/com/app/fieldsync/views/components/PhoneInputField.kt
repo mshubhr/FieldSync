@@ -23,6 +23,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.semantics.contentType
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.app.fieldsync.models.Country
@@ -83,16 +86,40 @@ fun PhoneInputField(
 
         OutlinedTextField(
             value = phoneNumber,
-            onValueChange = {
-                if (it.length <= selectedCountry.phoneLength && it.all { char -> char.isDigit() }) {
-                    onPhoneNumberChange(it)
+            onValueChange = { input ->
+                var cleanInput = input.filter { it.isDigit() }
+                val matchingCountry = countries.find { country ->
+                    val codeDigits = country.code.filter { it.isDigit() }
+                    input.startsWith(country.code) || (cleanInput.startsWith(codeDigits) && cleanInput.length > country.phoneLength)
+                }
+
+                if (matchingCountry != null) {
+                    if (matchingCountry != selectedCountry) {
+                        onCountrySelected(matchingCountry)
+                    }
+                    val codeDigits = matchingCountry.code.filter { it.isDigit() }
+                    cleanInput = cleanInput.removePrefix(codeDigits)
+                } else {
+                    val selectedCodeDigits = selectedCountry.code.filter { it.isDigit() }
+                    if (cleanInput.startsWith(selectedCodeDigits) && cleanInput.length > selectedCountry.phoneLength) {
+                        cleanInput = cleanInput.removePrefix(selectedCodeDigits)
+                    }
+                }
+
+                if (cleanInput.length <= (matchingCountry?.phoneLength
+                        ?: selectedCountry.phoneLength)
+                ) {
+                    onPhoneNumberChange(cleanInput)
                 }
             },
             label = { Text("Phone Number") },
             placeholder = { Text("Enter ${selectedCountry.phoneLength} digits") },
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f)
+                .semantics { contentType = ContentType.PhoneNumberDevice },
             leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Phone, autoCorrectEnabled = false
+            ),
             singleLine = true,
             enabled = enabled
         )

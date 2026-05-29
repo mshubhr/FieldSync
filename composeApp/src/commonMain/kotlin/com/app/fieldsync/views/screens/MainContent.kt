@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -42,7 +43,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,10 +64,10 @@ import com.app.fieldsync.views.components.DocumentTypeDropdown
 import com.app.fieldsync.views.components.HistoryChart
 import com.app.fieldsync.views.components.PlatformImagePicker
 import com.app.fieldsync.views.components.StatCard
-import io.ktor.util.encodeBase64
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlin.io.encoding.Base64
 import kotlin.math.roundToInt
 import kotlin.time.Clock
 
@@ -75,7 +75,10 @@ import kotlin.time.Clock
 @Composable
 fun MainContent(
     userName: String = "User",
+    historyEntries: List<RamEntry> = emptyList(),
     onLogout: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {},
+    onReportSynced: (RamEntry) -> Unit = {},
     reportRepository: ReportRepository = remember { ReportRepository() }
 ) {
     var showImagePicker by remember { mutableStateOf(false) }
@@ -84,19 +87,6 @@ fun MainContent(
     var note by remember { mutableStateOf("") }
     var isSyncing by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-
-    var historyEntries by remember { mutableStateOf(emptyList<RamEntry>()) }
-
-    LaunchedEffect(Unit) {
-        val localReports = reportRepository.getLocalReports()
-        historyEntries = localReports.map { report ->
-            RamEntry(
-                sizeKb = (report.imageBase64.length * 0.75 / 1024).toInt(),
-                date = kotlin.time.Instant.fromEpochMilliseconds(report.timestamp)
-                    .toLocalDateTime(TimeZone.currentSystemDefault()).date
-            )
-        }
-    }
 
     var offsetX by remember { mutableStateOf(0f) }
     var offsetY by remember { mutableStateOf(0f) }
@@ -120,6 +110,13 @@ fun MainContent(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Logout,
                             contentDescription = "Logout",
+                            tint = Color.White
+                        )
+                    }
+                    IconButton(onClick = onNavigateToProfile) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Profile",
                             tint = Color.White
                         )
                     }
@@ -256,18 +253,19 @@ fun MainContent(
                                                         val result = reportRepository.syncReport(
                                                             category = selectedCategory,
                                                             note = note,
-                                                            imageBase64 = imageBytes?.encodeBase64()
-                                                                ?: ""
-                                                        )
-                                                        if (result.isSuccess) {
-                                                            historyEntries =
-                                                                historyEntries + RamEntry(
-                                                                    sizeKb,
-                                                                    Clock.System.now()
-                                                                        .toLocalDateTime(
-                                                                            TimeZone.currentSystemDefault()
-                                                                        ).date
+                                                            imageBase64 = imageBytes?.let {
+                                                                Base64.encode(
+                                                                    it
                                                                 )
+                                                            } ?: "")
+                                                        if (result.isSuccess) {
+                                                            val newEntry = RamEntry(
+                                                                sizeKb,
+                                                                Clock.System.now().toLocalDateTime(
+                                                                    TimeZone.currentSystemDefault()
+                                                                ).date
+                                                            )
+                                                            onReportSynced(newEntry)
                                                             imageBytes = null
                                                             selectedCategory = ""
                                                             note = ""
@@ -340,18 +338,19 @@ fun MainContent(
                                 isSyncing = true
                                 errorMessage = null
 
-                                val result = reportRepository.syncReport(
-                                    category = selectedCategory,
-                                    note = note,
-                                    imageBase64 = imageBytes?.encodeBase64() ?: ""
-                                )
+                                val result =
+                                    reportRepository.syncReport(
+                                        category = selectedCategory,
+                                        note = note,
+                                        imageBase64 = imageBytes?.let { Base64.encode(it) } ?: "")
 
                                 if (result.isSuccess) {
-                                    historyEntries = historyEntries + RamEntry(
+                                    val newEntry = RamEntry(
                                         (imageBytes?.size ?: 0) / 1024,
                                         Clock.System.now()
                                             .toLocalDateTime(TimeZone.currentSystemDefault()).date
                                     )
+                                    onReportSynced(newEntry)
                                     imageBytes = null
                                     selectedCategory = ""
                                     note = ""

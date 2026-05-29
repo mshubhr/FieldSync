@@ -18,9 +18,14 @@ import com.app.fieldsync.reports.LocalReportDataSource
 import com.app.fieldsync.reports.ReportRepository
 import com.app.fieldsync.views.screens.MainContent
 import com.app.fieldsync.views.screens.OnboardingScreen
+import com.app.fieldsync.views.screens.ProfileScreen
 import com.app.fieldsync.views.screens.SignInScreen
 import com.app.fieldsync.views.screens.SignUpScreen
 import com.app.fieldsync.views.screens.SplashScreen
+import com.app.fieldsync.models.RamEntry
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import com.russhwolf.settings.Settings
 
 @Composable
@@ -30,11 +35,25 @@ fun App(databaseDriverFactory: DatabaseDriverFactory? = null) {
     val hasSeenSplash = remember { settings.getBoolean("has_seen_splash", false) }
     val isLoggedIn = remember { settings.getBoolean("is_logged_in", false) }
     var userName by remember { mutableStateOf(settings.getString("user_name", "User")) }
+    var historyEntries by remember { mutableStateOf(emptyList<RamEntry>()) }
 
     val reportRepository = remember {
         val driver = databaseDriverFactory?.createDriver()
         val localDataSource = driver?.let { LocalReportDataSource(FieldSyncDatabase(it)) }
         ReportRepository(localDataSource)
+    }
+
+    LaunchedEffect(isLoggedIn) {
+        if (isLoggedIn) {
+            val localReports = reportRepository.getLocalReports()
+            historyEntries = localReports.map { report ->
+                RamEntry(
+                    sizeKb = ((report.imageBase64.length * 0.75) / 1024).toInt(),
+                    date = kotlin.time.Instant.fromEpochMilliseconds(report.timestamp)
+                        .toLocalDateTime(TimeZone.currentSystemDefault()).date,
+                )
+            }
+        }
     }
 
     MaterialTheme(
@@ -83,9 +102,23 @@ fun App(databaseDriverFactory: DatabaseDriverFactory? = null) {
                 }, onNavigateToSignIn = { currentScreen = Screen.SignIn })
 
                 Screen.Main -> MainContent(
-                    userName = userName, reportRepository = reportRepository, onLogout = {
+                    userName = userName,
+                    historyEntries = historyEntries,
+                    reportRepository = reportRepository,
+                    onLogout = {
                         settings.putBoolean("is_logged_in", false)
                         currentScreen = Screen.SignIn
+                    },
+                    onNavigateToProfile = {
+                        currentScreen = Screen.Profile
+                    },
+                    onReportSynced = { newEntry ->
+                        historyEntries = historyEntries + newEntry
+                    })
+
+                Screen.Profile -> ProfileScreen(
+                    userName = userName, historyEntries = historyEntries, onBack = {
+                        currentScreen = Screen.Main
                     })
             }
         }
