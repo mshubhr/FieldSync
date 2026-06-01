@@ -16,7 +16,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import fieldsync.composeapp.generated.resources.Res
-import fieldsync.composeapp.generated.resources.ic_launcher_playstore
+import fieldsync.composeapp.generated.resources.fieldSync
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 
@@ -37,7 +37,7 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         Image(
-            painter = painterResource(Res.drawable.ic_launcher_playstore),
+            painter = painterResource(Res.drawable.fieldSync),
             contentDescription = "Logo",
             modifier = Modifier.size(150.dp).alpha(alpha.value)
         )
