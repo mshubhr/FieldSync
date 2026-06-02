@@ -1,7 +1,15 @@
 package com.app.fieldsync.views.screens
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -50,6 +58,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -64,9 +73,12 @@ import com.app.fieldsync.views.components.DocumentTypeDropdown
 import com.app.fieldsync.views.components.HistoryChart
 import com.app.fieldsync.views.components.PlatformImagePicker
 import com.app.fieldsync.views.components.StatCard
+import fieldsync.composeapp.generated.resources.Res
+import fieldsync.composeapp.generated.resources.fieldSync
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.compose.resources.painterResource
 import kotlin.io.encoding.Base64
 import kotlin.math.roundToInt
 import kotlin.time.Clock
@@ -81,6 +93,7 @@ fun MainContent(
     onReportSynced: (RamEntry) -> Unit = {},
     reportRepository: ReportRepository = remember { ReportRepository() }
 ) {
+    var showActions by remember { mutableStateOf(false) }
     var showImagePicker by remember { mutableStateOf(false) }
     var imageBytes by remember { mutableStateOf<ByteArray?>(null) }
     var selectedCategory by remember { mutableStateOf("") }
@@ -99,26 +112,52 @@ fun MainContent(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(
-                        "FieldSync",
-                        fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = 1.sp,
-                        style = MaterialTheme.typography.headlineMedium
-                    )
-                }, actions = {
-                    IconButton(onClick = onLogout) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Logout,
-                            contentDescription = "Logout",
-                            tint = Color.White
+
+                    Box(
+                        modifier = Modifier
+                            .size(54.dp)
+                            .clip(CircleShape)
+                            .clickable { showActions = !showActions }
+                            .border(
+                                width = 1.dp,
+                                color = Color.White.copy(alpha = 0.15f),
+                                shape = CircleShape
+                            )
+                            .background(Color.Black),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(Res.drawable.fieldSync),
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp)
                         )
                     }
-                    IconButton(onClick = onNavigateToProfile) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Profile",
-                            tint = Color.White
-                        )
+
+                }, actions = {
+                    AnimatedVisibility(
+                        visible = showActions,
+                        enter = fadeIn() + expandHorizontally(),
+                        exit = fadeOut() + shrinkHorizontally()
+                    ) {
+
+                        Row {
+
+                            IconButton(onClick = onNavigateToProfile) {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = "Profile",
+                                    tint = Color.White
+                                )
+                            }
+
+                            IconButton(onClick = onLogout) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.Logout,
+                                    contentDescription = "Logout",
+                                    tint = Color.White
+                                )
+                            }
+                        }
                     }
                 }, colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Black,
@@ -128,7 +167,8 @@ fun MainContent(
                     actionIconContentColor = Color.Unspecified
                 )
             )
-        }) { paddingValues ->
+        }
+    ) { paddingValues ->
         Box(
             modifier = Modifier.fillMaxSize().padding(paddingValues).background(
                 Brush.verticalGradient(
