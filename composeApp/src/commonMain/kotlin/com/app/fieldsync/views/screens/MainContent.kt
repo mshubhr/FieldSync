@@ -2,10 +2,14 @@ package com.app.fieldsync.views.screens
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -75,6 +79,7 @@ import com.app.fieldsync.views.components.PlatformImagePicker
 import com.app.fieldsync.views.components.StatCard
 import fieldsync.composeapp.generated.resources.Res
 import fieldsync.composeapp.generated.resources.fieldSync
+import fieldsync.composeapp.generated.resources.fs_Logo
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -110,62 +115,11 @@ fun MainContent(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-
-                    Box(
-                        modifier = Modifier
-                            .size(54.dp)
-                            .clip(CircleShape)
-                            .clickable { showActions = !showActions }
-                            .border(
-                                width = 1.dp,
-                                color = Color.White.copy(alpha = 0.15f),
-                                shape = CircleShape
-                            )
-                            .background(Color.Black),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Image(
-                            painter = painterResource(Res.drawable.fieldSync),
-                            contentDescription = null,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-
-                }, actions = {
-                    AnimatedVisibility(
-                        visible = showActions,
-                        enter = fadeIn() + expandHorizontally(),
-                        exit = fadeOut() + shrinkHorizontally()
-                    ) {
-
-                        Row {
-
-                            IconButton(onClick = onNavigateToProfile) {
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = "Profile",
-                                    tint = Color.White
-                                )
-                            }
-
-                            IconButton(onClick = onLogout) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.Logout,
-                                    contentDescription = "Logout",
-                                    tint = Color.White
-                                )
-                            }
-                        }
-                    }
-                }, colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Black,
-                    scrolledContainerColor = Color.Unspecified,
-                    navigationIconContentColor = Color.Unspecified,
-                    titleContentColor = Color.White,
-                    actionIconContentColor = Color.Unspecified
-                )
+            FieldSyncTopBar(
+                showActions = showActions,
+                onToggleActions = { showActions = !showActions },
+                onNavigateToProfile = onNavigateToProfile,
+                onLogout = onLogout
             )
         }
     ) { paddingValues ->
@@ -462,4 +416,94 @@ fun MainContentPreview() {
     ) {
         MainContent()
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FieldSyncTopBar(
+    showActions: Boolean,
+    onToggleActions: () -> Unit,
+    onNavigateToProfile: () -> Unit,
+    onLogout: () -> Unit
+) {
+    CenterAlignedTopAppBar(
+        title = {
+            AnimatedContent(
+                targetState = showActions,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(220)) togetherWith
+                            fadeOut(animationSpec = tween(220))
+                },
+                label = "logo_transition"
+            ) { expanded ->
+                if (expanded) {
+                    // second image: without arrows / border
+                    Image(
+                        painter = painterResource(Res.drawable.fs_Logo),
+                        contentDescription = "FieldSync Logo",
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clickable { onToggleActions() }
+                    )
+                } else {
+                    // first image: with arrows + circular border
+                    Box(
+                        modifier = Modifier
+                            .size(54.dp)
+                            .clip(CircleShape)
+                            .border(
+                                width = 1.dp,
+                                color = Color.White.copy(alpha = 0.15f),
+                                shape = CircleShape
+                            )
+                            .background(Color.Black, CircleShape)
+                            .clickable { onToggleActions() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(Res.drawable.fieldSync),
+                            contentDescription = "FieldSync Logo",
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                }
+            }
+        },
+        actions = {
+            AnimatedVisibility(
+                visible = showActions,
+                enter = slideInHorizontally(
+                    initialOffsetX = { it / 2 }
+                ) + fadeIn(),
+                exit = slideOutHorizontally(
+                    targetOffsetX = { it / 2 }
+                ) + fadeOut()
+            ) {
+                Row {
+                    IconButton(onClick = onNavigateToProfile) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Profile",
+                            tint = Color.White
+                        )
+                    }
+
+                    IconButton(onClick = onLogout) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = "Logout",
+                            tint = Color.White
+                        )
+                    }
+                }
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color.Black,
+            scrolledContainerColor = Color.Unspecified,
+            navigationIconContentColor = Color.Unspecified,
+            titleContentColor = Color.White,
+            actionIconContentColor = Color.Unspecified
+        )
+    )
 }
