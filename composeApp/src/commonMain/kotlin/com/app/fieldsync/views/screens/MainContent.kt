@@ -1,7 +1,19 @@
 package com.app.fieldsync.views.screens
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -50,6 +62,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -64,9 +77,13 @@ import com.app.fieldsync.views.components.DocumentTypeDropdown
 import com.app.fieldsync.views.components.HistoryChart
 import com.app.fieldsync.views.components.PlatformImagePicker
 import com.app.fieldsync.views.components.StatCard
+import fieldsync.composeapp.generated.resources.Res
+import fieldsync.composeapp.generated.resources.fieldSync
+import fieldsync.composeapp.generated.resources.fs_Logo
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.compose.resources.painterResource
 import kotlin.io.encoding.Base64
 import kotlin.math.roundToInt
 import kotlin.time.Clock
@@ -81,6 +98,7 @@ fun MainContent(
     onReportSynced: (RamEntry) -> Unit = {},
     reportRepository: ReportRepository = remember { ReportRepository() }
 ) {
+    var showActions by remember { mutableStateOf(false) }
     var showImagePicker by remember { mutableStateOf(false) }
     var imageBytes by remember { mutableStateOf<ByteArray?>(null) }
     var selectedCategory by remember { mutableStateOf("") }
@@ -97,38 +115,14 @@ fun MainContent(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "FieldSync",
-                        fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = 1.sp,
-                        style = MaterialTheme.typography.headlineMedium
-                    )
-                }, actions = {
-                    IconButton(onClick = onLogout) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Logout,
-                            contentDescription = "Logout",
-                            tint = Color.White
-                        )
-                    }
-                    IconButton(onClick = onNavigateToProfile) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Profile",
-                            tint = Color.White
-                        )
-                    }
-                }, colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Black,
-                    scrolledContainerColor = Color.Unspecified,
-                    navigationIconContentColor = Color.Unspecified,
-                    titleContentColor = Color.White,
-                    actionIconContentColor = Color.Unspecified
-                )
+            FieldSyncTopBar(
+                showActions = showActions,
+                onToggleActions = { showActions = !showActions },
+                onNavigateToProfile = onNavigateToProfile,
+                onLogout = onLogout
             )
-        }) { paddingValues ->
+        }
+    ) { paddingValues ->
         Box(
             modifier = Modifier.fillMaxSize().padding(paddingValues).background(
                 Brush.verticalGradient(
@@ -422,4 +416,94 @@ fun MainContentPreview() {
     ) {
         MainContent()
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FieldSyncTopBar(
+    showActions: Boolean,
+    onToggleActions: () -> Unit,
+    onNavigateToProfile: () -> Unit,
+    onLogout: () -> Unit
+) {
+    CenterAlignedTopAppBar(
+        title = {
+            AnimatedContent(
+                targetState = showActions,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(220)) togetherWith
+                            fadeOut(animationSpec = tween(220))
+                },
+                label = "logo_transition"
+            ) { expanded ->
+                if (expanded) {
+                    // second image: without arrows / border
+                    Image(
+                        painter = painterResource(Res.drawable.fs_Logo),
+                        contentDescription = "FieldSync Logo",
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clickable { onToggleActions() }
+                    )
+                } else {
+                    // first image: with arrows + circular border
+                    Box(
+                        modifier = Modifier
+                            .size(54.dp)
+                            .clip(CircleShape)
+                            .border(
+                                width = 1.dp,
+                                color = Color.White.copy(alpha = 0.15f),
+                                shape = CircleShape
+                            )
+                            .background(Color.Black, CircleShape)
+                            .clickable { onToggleActions() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(Res.drawable.fieldSync),
+                            contentDescription = "FieldSync Logo",
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                }
+            }
+        },
+        actions = {
+            AnimatedVisibility(
+                visible = showActions,
+                enter = slideInHorizontally(
+                    initialOffsetX = { it / 2 }
+                ) + fadeIn(),
+                exit = slideOutHorizontally(
+                    targetOffsetX = { it / 2 }
+                ) + fadeOut()
+            ) {
+                Row {
+                    IconButton(onClick = onNavigateToProfile) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Profile",
+                            tint = Color.White
+                        )
+                    }
+
+                    IconButton(onClick = onLogout) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = "Logout",
+                            tint = Color.White
+                        )
+                    }
+                }
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color.Black,
+            scrolledContainerColor = Color.Unspecified,
+            navigationIconContentColor = Color.Unspecified,
+            titleContentColor = Color.White,
+            actionIconContentColor = Color.Unspecified
+        )
+    )
 }
