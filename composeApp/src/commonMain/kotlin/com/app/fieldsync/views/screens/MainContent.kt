@@ -20,27 +20,22 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudUpload
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -61,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import com.app.fieldsync.models.RamEntry
 import com.app.fieldsync.reports.ReportRepository
 import com.app.fieldsync.views.components.DocumentTypeDropdown
+import com.app.fieldsync.views.components.FieldSyncTopBar
 import com.app.fieldsync.views.components.HistoryChart
 import com.app.fieldsync.views.components.PlatformImagePicker
 import com.app.fieldsync.views.components.StatCard
@@ -81,6 +77,7 @@ fun MainContent(
     onReportSynced: (RamEntry) -> Unit = {},
     reportRepository: ReportRepository = remember { ReportRepository() }
 ) {
+    var showActions by remember { mutableStateOf(false) }
     var showImagePicker by remember { mutableStateOf(false) }
     var imageBytes by remember { mutableStateOf<ByteArray?>(null) }
     var selectedCategory by remember { mutableStateOf("") }
@@ -97,36 +94,11 @@ fun MainContent(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "FieldSync",
-                        fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = 1.sp,
-                        style = MaterialTheme.typography.headlineMedium
-                    )
-                }, actions = {
-                    IconButton(onClick = onLogout) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Logout,
-                            contentDescription = "Logout",
-                            tint = Color.White
-                        )
-                    }
-                    IconButton(onClick = onNavigateToProfile) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Profile",
-                            tint = Color.White
-                        )
-                    }
-                }, colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Black,
-                    scrolledContainerColor = Color.Unspecified,
-                    navigationIconContentColor = Color.Unspecified,
-                    titleContentColor = Color.White,
-                    actionIconContentColor = Color.Unspecified
-                )
+            FieldSyncTopBar(
+                showActions = showActions,
+                onToggleActions = { showActions = !showActions },
+                onNavigateToProfile = onNavigateToProfile,
+                onLogout = onLogout
             )
         }) { paddingValues ->
         Box(
