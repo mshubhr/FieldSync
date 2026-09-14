@@ -6,9 +6,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -16,12 +16,6 @@ import com.app.fieldsync.db.DatabaseDriverFactory
 import com.app.fieldsync.db.FieldSyncDatabase
 import com.app.fieldsync.reports.LocalReportDataSource
 import com.app.fieldsync.reports.ReportRepository
-import com.app.fieldsync.views.screens.MainContent
-import com.app.fieldsync.views.screens.OnboardingScreen
-import com.app.fieldsync.views.screens.ProfileScreen
-import com.app.fieldsync.views.screens.SignInScreen
-import com.app.fieldsync.views.screens.SignUpScreen
-import com.app.fieldsync.views.screens.SplashScreen
 import com.app.fieldsync.models.RamEntry
 import androidx.compose.runtime.LaunchedEffect
 import kotlinx.datetime.TimeZone
@@ -67,60 +61,27 @@ fun App(databaseDriverFactory: DatabaseDriverFactory? = null) {
         Surface(
             modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
         ) {
-            var currentScreen by remember {
-                mutableStateOf(
-                    when {
-                        !hasSeenSplash -> Screen.Splash
-                        isLoggedIn -> Screen.Main
-                        else -> Screen.SignIn
-                    }
-                )
+            val initialScreen = remember {
+                when {
+                    !hasSeenSplash -> Screen.Splash
+                    isLoggedIn -> Screen.Main
+                    else -> Screen.SignIn
+                }
             }
 
-            when (currentScreen) {
-                Screen.Splash -> SplashScreen(onSplashFinished = {
-                    settings.putBoolean("has_seen_splash", true)
-                    currentScreen = Screen.Onboarding
-                })
-
-                Screen.Onboarding -> OnboardingScreen(onOnboardingFinished = {
-                    currentScreen = Screen.SignIn
-                })
-
-                Screen.SignIn -> SignInScreen(onSignInSuccess = { name ->
-                    userName = name
-                    settings.putString("user_name", name)
-                    settings.putBoolean("is_logged_in", true)
-                    currentScreen = Screen.Main
-                }, onNavigateToSignUp = { currentScreen = Screen.SignUp })
-
-                Screen.SignUp -> SignUpScreen(onSignUpSuccess = { name ->
-                    userName = name
-                    settings.putString("user_name", name)
-                    settings.putBoolean("is_logged_in", true)
-                    currentScreen = Screen.Main
-                }, onNavigateToSignIn = { currentScreen = Screen.SignIn })
-
-                Screen.Main -> MainContent(
-                    userName = userName,
-                    historyEntries = historyEntries,
-                    reportRepository = reportRepository,
-                    onLogout = {
-                        settings.putBoolean("is_logged_in", false)
-                        currentScreen = Screen.SignIn
-                    },
-                    onNavigateToProfile = {
-                        currentScreen = Screen.Profile
-                    },
-                    onReportSynced = { newEntry ->
-                        historyEntries = historyEntries + newEntry
-                    })
-
-                Screen.Profile -> ProfileScreen(
-                    userName = userName, historyEntries = historyEntries, onBack = {
-                        currentScreen = Screen.Main
-                    })
-            }
+            NavigationHost(
+                initialScreen = initialScreen,
+                reportRepository = reportRepository,
+                userName = userName,
+                historyEntries = historyEntries,
+                onLogout = {
+                    settings.putBoolean("is_logged_in", false)
+                },
+                onReportSynced = { newEntry ->
+                    historyEntries = historyEntries + newEntry
+                },
+                settings = settings
+            )
         }
     }
 }
