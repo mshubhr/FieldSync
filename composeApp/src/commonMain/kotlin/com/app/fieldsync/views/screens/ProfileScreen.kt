@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -73,12 +74,19 @@ fun ProfileScreen(
                 )
             )
         }) { paddingValues ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues).background(Color(0xFFF2F1E4))
-                .verticalScroll(scrollState).padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+        Box(
+            modifier = Modifier.fillMaxSize().padding(paddingValues).background(Color(0xFFF2F1E4)),
+            contentAlignment = Alignment.TopCenter
         ) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 720.dp)
+                    .fillMaxWidth()
+                    .verticalScroll(scrollState)
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
             Box(
                 modifier = Modifier.size(160.dp), contentAlignment = Alignment.Center
             ) {
@@ -237,6 +245,7 @@ fun ProfileScreen(
             }
         }
     }
+}
 }
 
 @Preview

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -73,10 +74,11 @@ fun OnboardingScreen(onOnboardingFinished: () -> Unit) {
     val scope = rememberCoroutineScope()
 
     Box(
-        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.Center
     ) {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.widthIn(max = 600.dp).fillMaxSize()
         ) {
             HorizontalPager(
                 state = pagerState, modifier = Modifier.weight(1f).fillMaxWidth()

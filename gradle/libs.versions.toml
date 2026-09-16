@@ -24,6 +24,7 @@ androidx-navigation3 = "1.2.0-rc01"
 androidx-adaptive = "1.4.0-alpha02"
 
 [libraries]
+androidx-material3-window-size-class1 = { module = "androidx.compose.material3:material3-window-size-class" }
 multiplatform-settings = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "multiplatformSettings" }
 java-jwt = { module = "com.auth0:java-jwt", version.ref = "javaJwt" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }

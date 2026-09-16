@@ -1,16 +1,17 @@
 package com.app.fieldsync.views.navigation
 
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
+import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
+import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
+import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
-import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
-import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
-import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
-import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -26,12 +27,23 @@ import com.app.fieldsync.views.screens.SplashScreen
 import com.russhwolf.settings.Settings
 import kotlinx.serialization.Serializable
 
-@Serializable data object SplashKey : NavKey
-@Serializable data object OnboardingKey : NavKey
-@Serializable data object SignInKey : NavKey
-@Serializable data object SignUpKey : NavKey
-@Serializable data object MainKey : NavKey
-@Serializable data object ProfileKey : NavKey
+@Serializable
+data object SplashKey : NavKey
+
+@Serializable
+data object OnboardingKey : NavKey
+
+@Serializable
+data object SignInKey : NavKey
+
+@Serializable
+data object SignUpKey : NavKey
+
+@Serializable
+data object MainKey : NavKey
+
+@Serializable
+data object ProfileKey : NavKey
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
@@ -45,24 +57,25 @@ actual fun NavigationHost(
     settings: Settings
 ) {
     var user by remember { mutableStateOf(userName) }
-    
-    val initialKey = remember(initialScreen) {
-        when (initialScreen) {
-            Screen.Splash -> SplashKey
-            Screen.Onboarding -> OnboardingKey
-            Screen.SignIn -> SignInKey
-            Screen.SignUp -> SignUpKey
-            Screen.Main -> MainKey
-            Screen.Profile -> ProfileKey
-        }
+
+    val initialKey = when (initialScreen) {
+        Screen.Splash -> SplashKey
+        Screen.Onboarding -> OnboardingKey
+        Screen.SignIn -> SignInKey
+        Screen.SignUp -> SignUpKey
+        Screen.Main -> MainKey
+        Screen.Profile -> ProfileKey
     }
-    
+
     val backStack = rememberNavBackStack(initialKey)
 
-    val windowAdaptiveInfo = currentWindowAdaptiveInfo()
+    LaunchedEffect(initialKey) {
+        if (initialKey == MainKey && !backStack.contains(ProfileKey)) backStack.add(ProfileKey)
+    }
+
+    val windowAdaptiveInfo = currentWindowAdaptiveInfoV2()
     val directive = remember(windowAdaptiveInfo) {
-        calculatePaneScaffoldDirective(windowAdaptiveInfo)
-            .copy(horizontalPartitionSpacerSize = 0.dp)
+        calculatePaneScaffoldDirective(windowAdaptiveInfo).copy(horizontalPartitionSpacerSize = 0.dp)
     }
     val listDetailStrategy = rememberListDetailSceneStrategy<NavKey>(directive = directive)
 
@@ -74,13 +87,13 @@ actual fun NavigationHost(
             entry<SplashKey> {
                 SplashScreen(onSplashFinished = {
                     settings.putBoolean("has_seen_splash", true)
-                    while (backStack.size > 0) backStack.removeLastOrNull()
+                    while (backStack.isNotEmpty()) backStack.removeLastOrNull()
                     backStack.add(OnboardingKey)
                 })
             }
             entry<OnboardingKey> {
                 OnboardingScreen(onOnboardingFinished = {
-                    while (backStack.size > 0) backStack.removeLastOrNull()
+                    while (backStack.isNotEmpty()) backStack.removeLastOrNull()
                     backStack.add(SignInKey)
                 })
             }
@@ -89,7 +102,7 @@ actual fun NavigationHost(
                     user = name
                     settings.putString("user_name", name)
                     settings.putBoolean("is_logged_in", true)
-                    while (backStack.size > 0) backStack.removeLastOrNull()
+                    while (backStack.isNotEmpty()) backStack.removeLastOrNull()
                     backStack.add(MainKey)
                 }, onNavigateToSignUp = {
                     backStack.add(SignUpKey)
@@ -100,7 +113,7 @@ actual fun NavigationHost(
                     user = name
                     settings.putString("user_name", name)
                     settings.putBoolean("is_logged_in", true)
-                    while (backStack.size > 0) backStack.removeLastOrNull()
+                    while (backStack.isNotEmpty()) backStack.removeLastOrNull()
                     backStack.add(MainKey)
                 }, onNavigateToSignIn = {
                     backStack.removeLastOrNull()
@@ -115,11 +128,11 @@ actual fun NavigationHost(
                     reportRepository = reportRepository,
                     onLogout = {
                         onLogout()
-                        while (backStack.size > 0) backStack.removeLastOrNull()
+                        while (backStack.isNotEmpty()) backStack.removeLastOrNull()
                         backStack.add(SignInKey)
                     },
                     onNavigateToProfile = {
-                        backStack.add(ProfileKey)
+                        if (!backStack.contains(ProfileKey)) backStack.add(ProfileKey)
                     },
                     onReportSynced = onReportSynced
                 )
@@ -128,13 +141,9 @@ actual fun NavigationHost(
                 metadata = ListDetailSceneStrategy.detailPane()
             ) {
                 ProfileScreen(
-                    userName = user,
-                    historyEntries = historyEntries,
-                    onBack = {
+                    userName = user, historyEntries = historyEntries, onBack = {
                         backStack.removeLastOrNull()
-                    }
-                )
+                    })
             }
-        }
-    )
+        })
 }

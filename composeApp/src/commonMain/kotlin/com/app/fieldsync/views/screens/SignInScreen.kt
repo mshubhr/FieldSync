@@ -1,6 +1,7 @@
 package com.app.fieldsync.views.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -58,118 +60,126 @@ fun SignInScreen(
     val isPhoneValid = phoneNumber.length == selectedCountry.phoneLength
 
     Scaffold { paddingValues ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues).imePadding()
-                .verticalScroll(rememberScrollState()).padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Box(
+            modifier = Modifier.fillMaxSize().padding(paddingValues),
+            contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "Welcome Back",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Sign in to continue to FieldSync",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-
-            PhoneInputField(
-                phoneNumber = phoneNumber,
-                onPhoneNumberChange = { phoneNumber = it },
-                selectedCountry = selectedCountry,
-                onCountrySelected = {
-                    selectedCountry = it
-                    phoneNumber = ""
-                },
-                enabled = !isOtpSent && !isLoading
-            )
-
-            if (isOtpSent) {
-                Spacer(modifier = Modifier.height(24.dp))
+            Column(
+                modifier = Modifier.widthIn(max = 480.dp).fillMaxWidth().imePadding()
+                    .verticalScroll(rememberScrollState()).padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
                 Text(
-                    text = "Enter 6-digit OTP",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = "Welcome Back",
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                OtpInputField(
-                    otp = otp, onOtpChange = { if (it.length <= 6) otp = it }, enabled = !isLoading
-                )
-            }
-
-            if (errorMessage != null) {
-                Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = errorMessage!!,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
+                    text = "Sign in to continue to FieldSync",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            }
+                Spacer(modifier = Modifier.height(32.dp))
 
-            Spacer(modifier = Modifier.height(24.dp))
+                PhoneInputField(
+                    phoneNumber = phoneNumber,
+                    onPhoneNumberChange = { phoneNumber = it },
+                    selectedCountry = selectedCountry,
+                    onCountrySelected = {
+                        selectedCountry = it
+                        phoneNumber = ""
+                    },
+                    enabled = !isOtpSent && !isLoading
+                )
 
-            Button(
-                onClick = {
-                    val fullPhone = selectedCountry.code + phoneNumber
-                    if (!isOtpSent) {
-                        scope.launch {
-                            isLoading = true
-                            errorMessage = null
-                            val result = repository.sendOtp(fullPhone, checkAvailability = true)
-                            if (result.isSuccess) {
-                                isOtpSent = true
-                            } else {
-                                errorMessage =
-                                    result.exceptionOrNull()?.message ?: "Failed to send OTP"
-                            }
-                            isLoading = false
-                        }
-                    } else {
-                        scope.launch {
-                            isLoading = true
-                            errorMessage = null
-                            val result = repository.verifyOtp(
-                                phone = fullPhone,
-                                otp = otp,
-                                name = "",
-                                deviceId = platform.deviceId,
-                                deviceName = platform.deviceName,
-                                platform = platform.name
-                            )
-                            if (result.isSuccess) {
-                                val response = result.getOrNull()
-                                if (response != null) {
-                                    onSignInSuccess(response.name)
-                                }
-                            } else {
-                                errorMessage = result.exceptionOrNull()?.message ?: "Invalid OTP"
-                            }
-                            isLoading = false
-                        }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = MaterialTheme.shapes.medium,
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
-                enabled = !isLoading && (if (!isOtpSent) isPhoneValid else otp.length == 6)
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        color = Color.White, modifier = Modifier.size(24.dp), strokeWidth = 2.dp
+                if (isOtpSent) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        text = "Enter 6-digit OTP",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                } else {
-                    Text(if (isOtpSent) "Verify & Sign In" else "Send OTP")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OtpInputField(
+                        otp = otp,
+                        onOtpChange = { if (it.length <= 6) otp = it },
+                        enabled = !isLoading
+                    )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                if (errorMessage != null) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = errorMessage!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
 
-            TextButton(onClick = onNavigateToSignUp) {
-                Text("Don't have an account? Sign Up")
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = {
+                        val fullPhone = selectedCountry.code + phoneNumber
+                        if (!isOtpSent) {
+                            scope.launch {
+                                isLoading = true
+                                errorMessage = null
+                                val result = repository.sendOtp(fullPhone, true)
+                                if (result.isSuccess) {
+                                    isOtpSent = true
+                                } else {
+                                    errorMessage =
+                                        result.exceptionOrNull()?.message ?: "Failed to send OTP"
+                                }
+                                isLoading = false
+                            }
+                        } else {
+                            scope.launch {
+                                isLoading = true
+                                errorMessage = null
+                                val result = repository.verifyOtp(
+                                    phone = fullPhone,
+                                    otp = otp,
+                                    name = "",
+                                    deviceId = platform.deviceId,
+                                    deviceName = platform.deviceName,
+                                    platform = platform.name
+                                )
+                                if (result.isSuccess) {
+                                    val response = result.getOrNull()
+                                    if (response != null) {
+                                        onSignInSuccess(response.name)
+                                    }
+                                } else {
+                                    errorMessage =
+                                        result.exceptionOrNull()?.message ?: "Invalid OTP"
+                                }
+                                isLoading = false
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+                    enabled = !isLoading && (if (!isOtpSent) isPhoneValid else otp.length == 6)
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White, modifier = Modifier.size(24.dp), strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(if (isOtpSent) "Verify & Sign In" else "Send OTP")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                TextButton(onClick = onNavigateToSignUp) {
+                    Text("Don't have an account? Sign Up")
+                }
             }
         }
     }

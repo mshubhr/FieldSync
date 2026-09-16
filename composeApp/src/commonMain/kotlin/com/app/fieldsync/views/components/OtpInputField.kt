@@ -9,6 +9,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,29 +29,43 @@ fun OtpInputField(
 ) {
     val focusRequesters = remember { List(6) { FocusRequester() } }
 
+    val targetFocusIndex = otp.length.coerceAtMost(5)
+    LaunchedEffect(targetFocusIndex) {
+        if (enabled && otp.length < 6) {
+            focusRequesters[targetFocusIndex].requestFocus()
+        }
+    }
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
     ) {
         repeat(6) { index ->
+            val charStr = otp.getOrNull(index)?.toString() ?: ""
             OutlinedTextField(
-                value = otp.getOrNull(index)?.toString() ?: "",
+                value = charStr,
                 onValueChange = { newValue ->
-                    if (newValue.all { it.isDigit() }) {
-                        val nextValue = newValue.lastOrNull()?.toString() ?: ""
-                        val newOtp = otp.padEnd(6, ' ').toCharArray()
-                        newOtp[index] = nextValue.firstOrNull() ?: ' '
-                        onOtpChange(newOtp.concatToString().replace(" ", ""))
-
-                        if (nextValue.isNotEmpty() && index < 5) {
-                            focusRequesters[index + 1].requestFocus()
+                    val digits = newValue.filter { it.isDigit() }
+                    if (digits.isNotEmpty()) {
+                        if (digits.length >= 6) {
+                            onOtpChange(digits.take(6))
+                        } else {
+                            val nextValue = digits.lastOrNull()?.toString() ?: ""
+                            val newOtp = otp.padEnd(6, ' ').toCharArray()
+                            newOtp[index] = nextValue.firstOrNull() ?: ' '
+                            onOtpChange(newOtp.concatToString().trimEnd().replace(" ", ""))
                         }
+                    } else if (newValue.isEmpty()) {
+                        val newOtp = otp.padEnd(6, ' ').toCharArray()
+                        newOtp[index] = ' '
+                        onOtpChange(newOtp.concatToString().trimEnd().replace(" ", ""))
                     }
                 },
                 modifier = Modifier.width(48.dp).focusRequester(focusRequesters[index])
                     .onKeyEvent { event ->
-                        if (event.key == Key.Backspace && (otp.getOrNull(index) == null) && index > 0) {
-                            focusRequesters[index - 1].requestFocus()
+                        if (event.key == Key.Backspace && charStr.isEmpty() && index > 0) {
+                            val nextOtp = if (otp.length > index - 1) otp.take(index - 1) else otp
+                            onOtpChange(nextOtp)
                             true
                         } else {
                             false

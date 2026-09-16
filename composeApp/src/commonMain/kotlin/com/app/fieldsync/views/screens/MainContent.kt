@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -134,10 +135,15 @@ fun MainContent(
                 Brush.verticalGradient(
                     colors = listOf(Color.Black.copy(alpha = 0.05f), Color.White)
                 )
-            )
+            ),
+            contentAlignment = Alignment.TopCenter
         ) {
             Column(
-                modifier = Modifier.fillMaxSize().verticalScroll(scrollState).padding(24.dp),
+                modifier = Modifier
+                    .widthIn(max = 720.dp)
+                    .fillMaxWidth()
+                    .verticalScroll(scrollState)
+                    .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
@@ -409,7 +415,7 @@ fun MainContent(
     }
 }
 
-@Preview
+@Preview(device = "spec:width=2076px,height=2152px,dpi=440")
 @Composable
 fun MainContentPreview() {
     MaterialTheme(

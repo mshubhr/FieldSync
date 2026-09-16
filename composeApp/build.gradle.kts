@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -49,6 +50,7 @@ kotlin {
             implementation(libs.adaptiveLayout)
             implementation(libs.adaptiveNavigation3)
             implementation(libs.androidx.core.ktx)
+            implementation(libs.androidx.material3.window.size.class1)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -62,6 +64,7 @@ kotlin {
             implementation(projects.shared)
             implementation(libs.material.icons.extended)
             implementation(libs.kotlinx.datetime)
+            implementation(libs.kotlinx.serialization.json)
             implementation(libs.multiplatform.settings)
             implementation(libs.ktor.client.core)
         }

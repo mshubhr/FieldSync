@@ -1,6 +1,7 @@
 package com.app.fieldsync.views.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -60,127 +62,135 @@ fun SignUpScreen(
     val isPhoneValid = phoneNumber.length == selectedCountry.phoneLength
 
     Scaffold { paddingValues ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues).imePadding()
-                .verticalScroll(rememberScrollState()).padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Box(
+            modifier = Modifier.fillMaxSize().padding(paddingValues),
+            contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "Create Account",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-
-            OutlinedTextField(
-                value = fullName,
-                onValueChange = { newValue ->
-                    if (newValue.all { it.isLetter() || it.isWhitespace() }) {
-                        fullName = newValue
-                    }
-                },
-                label = { Text("Full Name") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = !isOtpSent && !isLoading
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            PhoneInputField(
-                phoneNumber = phoneNumber,
-                onPhoneNumberChange = { phoneNumber = it },
-                selectedCountry = selectedCountry,
-                onCountrySelected = {
-                    selectedCountry = it
-                    phoneNumber = ""
-                },
-                enabled = !isOtpSent && !isLoading
-            )
-
-            if (isOtpSent) {
-                Spacer(modifier = Modifier.height(24.dp))
-                Text(
-                    text = "Enter 6-digit OTP",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OtpInputField(
-                    otp = otp, onOtpChange = { if (it.length <= 6) otp = it }, enabled = !isLoading
-                )
-            }
-
-            if (errorMessage != null) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = errorMessage!!,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                onClick = {
-                    val fullPhone = selectedCountry.code + phoneNumber
-                    if (!isOtpSent) {
-                        scope.launch {
-                            isLoading = true
-                            errorMessage = null
-                            val result = repository.sendOtp(fullPhone)
-                            if (result.isSuccess) {
-                                isOtpSent = true
-                            } else {
-                                errorMessage =
-                                    result.exceptionOrNull()?.message ?: "Failed to send OTP"
-                            }
-                            isLoading = false
-                        }
-                    } else {
-                        scope.launch {
-                            isLoading = true
-                            errorMessage = null
-                            val result = repository.verifyOtp(
-                                phone = fullPhone,
-                                otp = otp,
-                                name = fullName,
-                                deviceId = platform.deviceId,
-                                deviceName = platform.deviceName,
-                                platform = platform.name
-                            )
-                            if (result.isSuccess) {
-                                val response = result.getOrNull()
-                                if (response != null) {
-                                    onSignUpSuccess(response.name)
-                                }
-                            } else {
-                                errorMessage = result.exceptionOrNull()?.message ?: "Invalid OTP"
-                            }
-                            isLoading = false
-                        }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = MaterialTheme.shapes.medium,
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
-                enabled = !isLoading && (if (!isOtpSent) (isPhoneValid && fullName.isNotBlank()) else otp.length == 6)
+            Column(
+                modifier = Modifier.widthIn(max = 480.dp).fillMaxWidth().imePadding()
+                    .verticalScroll(rememberScrollState()).padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        color = Color.White, modifier = Modifier.size(24.dp), strokeWidth = 2.dp
+                Text(
+                    text = "Create Account",
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(32.dp))
+
+                OutlinedTextField(
+                    value = fullName,
+                    onValueChange = { newValue ->
+                        if (newValue.all { it.isLetter() || it.isWhitespace() }) {
+                            fullName = newValue
+                        }
+                    },
+                    label = { Text("Full Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    enabled = !isOtpSent && !isLoading
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                PhoneInputField(
+                    phoneNumber = phoneNumber,
+                    onPhoneNumberChange = { phoneNumber = it },
+                    selectedCountry = selectedCountry,
+                    onCountrySelected = {
+                        selectedCountry = it
+                        phoneNumber = ""
+                    },
+                    enabled = !isOtpSent && !isLoading
+                )
+
+                if (isOtpSent) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        text = "Enter 6-digit OTP",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                } else {
-                    Text(if (isOtpSent) "Create Account" else "Send OTP")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OtpInputField(
+                        otp = otp,
+                        onOtpChange = { if (it.length <= 6) otp = it },
+                        enabled = !isLoading
+                    )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                if (errorMessage != null) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = errorMessage!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
 
-            TextButton(onClick = onNavigateToSignIn) {
-                Text("Already have an account? Sign In")
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = {
+                        val fullPhone = selectedCountry.code + phoneNumber
+                        if (!isOtpSent) {
+                            scope.launch {
+                                isLoading = true
+                                errorMessage = null
+                                val result = repository.sendOtp(fullPhone)
+                                if (result.isSuccess) {
+                                    isOtpSent = true
+                                } else {
+                                    errorMessage =
+                                        result.exceptionOrNull()?.message ?: "Failed to send OTP"
+                                }
+                                isLoading = false
+                            }
+                        } else {
+                            scope.launch {
+                                isLoading = true
+                                errorMessage = null
+                                val result = repository.verifyOtp(
+                                    phone = fullPhone,
+                                    otp = otp,
+                                    name = fullName,
+                                    deviceId = platform.deviceId,
+                                    deviceName = platform.deviceName,
+                                    platform = platform.name
+                                )
+                                if (result.isSuccess) {
+                                    val response = result.getOrNull()
+                                    if (response != null) {
+                                        onSignUpSuccess(response.name)
+                                    }
+                                } else {
+                                    errorMessage =
+                                        result.exceptionOrNull()?.message ?: "Invalid OTP"
+                                }
+                                isLoading = false
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+                    enabled = !isLoading && (if (!isOtpSent) (isPhoneValid && fullName.isNotBlank()) else otp.length == 6)
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White, modifier = Modifier.size(24.dp), strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(if (isOtpSent) "Create Account" else "Send OTP")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                TextButton(onClick = onNavigateToSignIn) {
+                    Text("Already have an account? Sign In")
+                }
             }
         }
     }
