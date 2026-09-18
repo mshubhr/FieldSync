@@ -1,7 +1,6 @@
 package com.app.fieldsync.auth
 
-import com.app.fieldsync.SERVER_PORT
-import com.app.fieldsync.getPlatform
+import com.app.fieldsync.BuildConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -25,13 +24,7 @@ class AuthRepository {
     }
 
     private val baseUrl: String
-        get() {
-            return if (getPlatform().name.contains("Android")) {
-                "http://10.0.2.2:$SERVER_PORT"
-            } else {
-                "http://localhost:$SERVER_PORT"
-            }
-        }
+        get() = BuildConfig.baseUrl
 
     suspend fun sendOtp(phone: String, checkAvailability: Boolean = false): Result<String> {
         return try {
@@ -45,7 +38,11 @@ class AuthRepository {
             if (response.status == HttpStatusCode.OK) {
                 Result.success("OTP sent")
             } else {
-                val error = try { response.body<String>() } catch (_: Exception) { "Failed to send OTP: ${response.status}" }
+                val error = try {
+                    response.body<String>()
+                } catch (_: Exception) {
+                    "Failed to send OTP: ${response.status}"
+                }
                 Result.failure(Exception(error))
             }
         } catch (e: Exception) {
@@ -69,7 +66,11 @@ class AuthRepository {
             if (response.status == HttpStatusCode.OK) {
                 Result.success(response.body())
             } else {
-                val error = try { response.body<String>() } catch (_: Exception) { "Verification failed: ${response.status}" }
+                val error = try {
+                    response.body<String>()
+                } catch (_: Exception) {
+                    "Verification failed: ${response.status}"
+                }
                 Result.failure(Exception(error))
             }
         } catch (e: Exception) {
