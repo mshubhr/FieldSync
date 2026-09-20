@@ -55,13 +55,11 @@ fun FieldSyncTopBar(
                 }, label = "logo_transition"
             ) { expanded ->
                 if (expanded) {
-                    // second image: without arrows / border
                     Image(
                         painter = painterResource(Res.drawable.fs_Logo),
                         contentDescription = "FieldSync Logo",
                         modifier = Modifier.size(32.dp).clickable { onToggleActions() })
                 } else {
-                    // first image: with arrows + circular border
                     Box(
                         modifier = Modifier.size(54.dp).clip(CircleShape).border(
                             width = 1.dp,
