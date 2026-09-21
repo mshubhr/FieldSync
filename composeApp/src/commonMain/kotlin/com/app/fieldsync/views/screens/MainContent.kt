@@ -1,12 +1,16 @@
 package com.app.fieldsync.views.screens
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalFlexBoxApi
+import androidx.compose.foundation.layout.ExperimentalGridApi
+import androidx.compose.foundation.layout.FlexBox
+import androidx.compose.foundation.layout.Grid
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -40,7 +44,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -135,14 +138,10 @@ fun MainContent(
                 Brush.verticalGradient(
                     colors = listOf(Color.Black.copy(alpha = 0.05f), Color.White)
                 )
-            ),
-            contentAlignment = Alignment.TopCenter
+            ), contentAlignment = Alignment.TopCenter
         ) {
             Column(
-                modifier = Modifier
-                    .widthIn(max = 720.dp)
-                    .fillMaxWidth()
-                    .verticalScroll(scrollState)
+                modifier = Modifier.widthIn(max = 720.dp).fillMaxWidth().verticalScroll(scrollState)
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(24.dp)
@@ -161,18 +160,29 @@ fun MainContent(
                     )
                 }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                @OptIn(ExperimentalGridApi::class) Grid(
+                    config = {
+                        val availableWidth = constraints.maxWidth.toDp()
+                        val cols = if (availableWidth < 48.dp) 1 else 3
+                        val rows = if (cols == 1) 3 else 1
+
+                        repeat(cols) {
+                            column(
+                                ((availableWidth - (12.dp * (cols - 1))) / cols).coerceAtLeast(
+                                    0.dp
+                                )
+                            )
+                        }
+                        repeat(rows) { row(100.dp) }
+                        gap(12.dp)
+                    }, modifier = Modifier.fillMaxWidth()
                 ) {
-                    StatCard("Pending", "0", Modifier.weight(1f), Color(0xFFFF9800))
-                    StatCard(
-                        "Synced", "${historyEntries.size}", Modifier.weight(1f), Color(0xFF4CAF50)
-                    )
+                    StatCard("Pending", "0", Modifier, Color(0xFFFF9800))
+                    StatCard("Synced", "${historyEntries.size}", Modifier, Color(0xFF4CAF50))
                     StatCard(
                         "Storage",
                         "${historyEntries.sumOf { it.sizeKb } / 1024} MB",
-                        Modifier.weight(1f),
+                        Modifier,
                         Color(0xFF2196F3))
                 }
 
@@ -333,22 +343,22 @@ fun MainContent(
                     )
                 }
 
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                @OptIn(ExperimentalFlexBoxApi::class) FlexBox(
+                    config = {
+                        justifyContent(androidx.compose.foundation.layout.FlexJustifyContent.Center)
+                        gap(12.dp)
+                    }, modifier = Modifier.fillMaxWidth()
                 ) {
-
                     Button(
                         onClick = {
                             scope.launch {
                                 isSyncing = true
                                 errorMessage = null
 
-                                val result =
-                                    reportRepository.syncReport(
-                                        category = selectedCategory,
-                                        note = note,
-                                        imageBase64 = imageBytes?.let { Base64.encode(it) } ?: "")
+                                val result = reportRepository.syncReport(
+                                    category = selectedCategory,
+                                    note = note,
+                                    imageBase64 = imageBytes?.let { Base64.encode(it) } ?: "")
 
                                 if (result.isSuccess) {
                                     val newEntry = RamEntry(
@@ -367,7 +377,9 @@ fun MainContent(
                                 isSyncing = false
                             }
                         },
-                        modifier = Modifier.fillMaxWidth().height(60.dp),
+                        modifier = Modifier.height(60.dp).flex {
+                            grow(1f)
+                        },
                         shape = RoundedCornerShape(16.dp),
                         enabled = (imageBytes != null && selectedCategory.isNotEmpty()) && !isSyncing,
                         colors = ButtonDefaults.buttonColors(
@@ -393,11 +405,16 @@ fun MainContent(
                     }
 
                     if (imageBytes != null) {
-                        TextButton(
+                        Button(
                             onClick = { imageBytes = null },
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                            modifier = Modifier.height(60.dp).flex {
+                                grow(0.3f)
+                            },
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
                         ) {
-                            Text("Clear and retake", color = MaterialTheme.colorScheme.error)
+                            Text("Retake", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -415,7 +432,7 @@ fun MainContent(
     }
 }
 
-@Preview(device = "spec:width=2076px,height=2152px,dpi=440")
+@Preview
 @Composable
 fun MainContentPreview() {
     MaterialTheme(

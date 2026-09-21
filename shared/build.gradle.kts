@@ -1,3 +1,4 @@
+import com.android.build.api.dsl.LibraryExtension
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -14,21 +15,20 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-    
+
     iosArm64()
     iosSimulatorArm64()
-    
+
     jvm()
-    
+
     js {
         browser()
     }
-    
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
+
+    @OptIn(ExperimentalWasmDsl::class) wasmJs {
         browser()
     }
-    
+
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
@@ -56,15 +56,15 @@ kotlin {
     }
 }
 
-android {
+extensions.configure<LibraryExtension> {
     namespace = "com.app.fieldsync.shared"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    compileSdk = 37
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
     defaultConfig {
-        minSdk = libs.versions.android.minSdk.get().toInt()
+        minSdk = 24
     }
 }
 

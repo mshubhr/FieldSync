@@ -6,7 +6,6 @@ import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
 import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -68,16 +67,12 @@ actual fun NavigationHost(
     }
 
     val backStack = rememberNavBackStack(initialKey)
-
-    LaunchedEffect(initialKey) {
-        if (initialKey == MainKey && !backStack.contains(ProfileKey)) backStack.add(ProfileKey)
-    }
-
     val windowAdaptiveInfo = currentWindowAdaptiveInfoV2()
     val directive = remember(windowAdaptiveInfo) {
         calculatePaneScaffoldDirective(windowAdaptiveInfo).copy(horizontalPartitionSpacerSize = 0.dp)
     }
     val listDetailStrategy = rememberListDetailSceneStrategy<NavKey>(directive = directive)
+    val isProfileOpen = backStack.lastOrNull() == ProfileKey
 
     NavDisplay(
         backStack = backStack,
@@ -120,7 +115,11 @@ actual fun NavigationHost(
                 })
             }
             entry<MainKey>(
-                metadata = ListDetailSceneStrategy.listPane()
+                metadata = if (isProfileOpen) {
+                    ListDetailSceneStrategy.listPane()
+                } else {
+                    emptyMap()
+                }
             ) {
                 MainContent(
                     userName = user,
