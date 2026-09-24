@@ -53,6 +53,10 @@ kotlin {
         jsMain.dependencies {
             implementation(libs.web.worker.driver)
         }
+        jvmMain.dependencies {
+            implementation(libs.sqldelight.sqlite.driver)
+            implementation(libs.ktor.client.cio)
+        }
     }
 }
 
