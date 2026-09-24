@@ -1,7 +1,7 @@
 [versions]
 agp = "9.4.1"
 androidx-activity = "1.13.0"
-androidx-core = "1.19.0"
+androidx-core = "1.19.1"
 androidx-lifecycle = "2.11.0"
 composeHotReload = "1.2.0"
 composeMultiplatform = "1.12.0"
@@ -17,7 +17,7 @@ kotlinx-serialization = "1.11.0"
 multiplatformSettings = "1.3.0"
 sqlDelight = "2.4.0"
 twilio = "13.0.1"
-androidx-navigation3 = "1.2.0-rc01"
+androidx-navigation3 = "1.2.0"
 androidx-adaptive = "1.4.0-alpha02"
 
 [libraries]
