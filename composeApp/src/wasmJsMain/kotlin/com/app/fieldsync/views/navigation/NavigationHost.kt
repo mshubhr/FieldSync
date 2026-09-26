@@ -13,6 +13,7 @@ import com.app.fieldsync.views.screens.ProfileScreen
 import com.app.fieldsync.views.screens.SignInScreen
 import com.app.fieldsync.views.screens.SignUpScreen
 import com.app.fieldsync.views.screens.SplashScreen
+import com.app.fieldsync.views.screens.SyncLabScreen
 import com.russhwolf.settings.Settings
 
 @Composable
@@ -33,21 +34,25 @@ actual fun NavigationHost(
             settings.putBoolean("has_seen_splash", true)
             currentScreen = Screen.Onboarding
         })
+
         Screen.Onboarding -> OnboardingScreen(onOnboardingFinished = {
             currentScreen = Screen.SignIn
         })
+
         Screen.SignIn -> SignInScreen(onSignInSuccess = { name ->
             user = name
             settings.putString("user_name", name)
             settings.putBoolean("is_logged_in", true)
             currentScreen = Screen.Main
         }, onNavigateToSignUp = { currentScreen = Screen.SignUp })
+
         Screen.SignUp -> SignUpScreen(onSignUpSuccess = { name ->
             user = name
             settings.putString("user_name", name)
             settings.putBoolean("is_logged_in", true)
             currentScreen = Screen.Main
         }, onNavigateToSignIn = { currentScreen = Screen.SignIn })
+
         Screen.Main -> MainContent(
             userName = user,
             historyEntries = historyEntries,
@@ -59,12 +64,18 @@ actual fun NavigationHost(
             onNavigateToProfile = {
                 currentScreen = Screen.Profile
             },
+            onNavigateToSyncLab = {
+                currentScreen = Screen.SyncLab
+            },
             onReportSynced = onReportSynced
         )
+
         Screen.Profile -> ProfileScreen(
             userName = user,
             historyEntries = historyEntries,
-            onBack = { currentScreen = Screen.Main }
-        )
+            onBack = { currentScreen = Screen.Main })
+
+        Screen.SyncLab -> SyncLabScreen(
+            reportRepository = reportRepository, onBack = { currentScreen = Screen.Main })
     }
 }

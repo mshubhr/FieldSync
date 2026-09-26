@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Science
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -47,6 +48,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -82,6 +84,7 @@ fun MainContent(
     historyEntries: List<RamEntry> = emptyList(),
     onLogout: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
+    onNavigateToSyncLab: () -> Unit = {},
     onReportSynced: (RamEntry) -> Unit = {},
     reportRepository: ReportRepository = remember { ReportRepository() }
 ) {
@@ -91,6 +94,7 @@ fun MainContent(
     var note by remember { mutableStateOf("") }
     var isSyncing by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var pendingCount by remember { mutableStateOf(0) }
 
     var offsetX by remember { mutableStateOf(0f) }
     var offsetY by remember { mutableStateOf(0f) }
@@ -98,6 +102,10 @@ fun MainContent(
 
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(historyEntries, isSyncing) {
+        pendingCount = reportRepository.getPendingCount()
+    }
 
     Scaffold(
         topBar = {
@@ -110,10 +118,10 @@ fun MainContent(
                         style = MaterialTheme.typography.headlineMedium
                     )
                 }, actions = {
-                    IconButton(onClick = onLogout) {
+                    IconButton(onClick = onNavigateToSyncLab) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Logout,
-                            contentDescription = "Logout",
+                            imageVector = Icons.Default.Science,
+                            contentDescription = "Sync Lab",
                             tint = Color.White
                         )
                     }
@@ -121,6 +129,13 @@ fun MainContent(
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = "Profile",
+                            tint = Color.White
+                        )
+                    }
+                    IconButton(onClick = onLogout) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = "Logout",
                             tint = Color.White
                         )
                     }
@@ -177,7 +192,7 @@ fun MainContent(
                         gap(12.dp)
                     }, modifier = Modifier.fillMaxWidth()
                 ) {
-                    StatCard("Pending", "0", Modifier, Color(0xFFFF9800))
+                    StatCard("Pending", "$pendingCount", Modifier, Color(0xFFFF9800))
                     StatCard("Synced", "${historyEntries.size}", Modifier, Color(0xFF4CAF50))
                     StatCard(
                         "Storage",

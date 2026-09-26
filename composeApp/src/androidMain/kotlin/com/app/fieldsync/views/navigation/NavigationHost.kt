@@ -23,6 +23,7 @@ import com.app.fieldsync.views.screens.ProfileScreen
 import com.app.fieldsync.views.screens.SignInScreen
 import com.app.fieldsync.views.screens.SignUpScreen
 import com.app.fieldsync.views.screens.SplashScreen
+import com.app.fieldsync.views.screens.SyncLabScreen
 import com.russhwolf.settings.Settings
 import kotlinx.serialization.Serializable
 
@@ -44,6 +45,9 @@ data object MainKey : NavKey
 @Serializable
 data object ProfileKey : NavKey
 
+@Serializable
+data object SyncLabKey : NavKey
+
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 actual fun NavigationHost(
@@ -64,6 +68,7 @@ actual fun NavigationHost(
         Screen.SignUp -> SignUpKey
         Screen.Main -> MainKey
         Screen.Profile -> ProfileKey
+        Screen.SyncLab -> SyncLabKey
     }
 
     val backStack = rememberNavBackStack(initialKey)
@@ -133,6 +138,9 @@ actual fun NavigationHost(
                     onNavigateToProfile = {
                         if (!backStack.contains(ProfileKey)) backStack.add(ProfileKey)
                     },
+                    onNavigateToSyncLab = {
+                        if (!backStack.contains(SyncLabKey)) backStack.add(SyncLabKey)
+                    },
                     onReportSynced = onReportSynced
                 )
             }
@@ -141,6 +149,12 @@ actual fun NavigationHost(
             ) {
                 ProfileScreen(
                     userName = user, historyEntries = historyEntries, onBack = {
+                        backStack.removeLastOrNull()
+                    })
+            }
+            entry<SyncLabKey> {
+                SyncLabScreen(
+                    reportRepository = reportRepository, onBack = {
                         backStack.removeLastOrNull()
                     })
             }
