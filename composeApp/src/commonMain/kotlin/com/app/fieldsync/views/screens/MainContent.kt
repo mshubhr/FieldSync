@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalFlexBoxApi
 import androidx.compose.foundation.layout.ExperimentalGridApi
 import androidx.compose.foundation.layout.FlexBox
+import androidx.compose.foundation.layout.FlexJustifyContent
 import androidx.compose.foundation.layout.Grid
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,8 +31,10 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Science
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -64,8 +68,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.app.fieldsync.features.dashboard.ConnectionStatus
+import com.app.fieldsync.features.dashboard.DashboardStat
+import com.app.fieldsync.features.dashboard.FieldMapCanvas
+import com.app.fieldsync.features.dashboard.FieldStatusLabel
+import com.app.fieldsync.features.dashboard.SelectedWorkerCard
+import com.app.fieldsync.features.dashboard.WorkerMarker
 import com.app.fieldsync.models.RamEntry
 import com.app.fieldsync.reports.ReportRepository
+import com.app.fieldsync.reports.SyncNetworkMode
 import com.app.fieldsync.views.components.DocumentTypeDropdown
 import com.app.fieldsync.views.components.HistoryChart
 import com.app.fieldsync.views.components.PlatformImagePicker
@@ -95,6 +106,7 @@ fun MainContent(
     var isSyncing by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var pendingCount by remember { mutableStateOf(0) }
+    var selectedWorker by remember { mutableStateOf<WorkerMarker?>(null) }
 
     var offsetX by remember { mutableStateOf(0f) }
     var offsetY by remember { mutableStateOf(0f) }
@@ -161,18 +173,91 @@ fun MainContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                Column(horizontalAlignment = Alignment.Start, modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = "Good morning, $userName",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.Black
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Good morning, $userName",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.Black
+                        )
+                        Text(
+                            text = "7 field workers active • ${historyEntries.size} syncs completed today",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray
+                        )
+                    }
+
+                    ConnectionStatus(
+                        online = reportRepository.networkMode != SyncNetworkMode.OFFLINE
                     )
-                    Text(
-                        text = "You have ${historyEntries.size} syncs completed today",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Gray
-                    )
+                }
+
+                Card(
+                    modifier = Modifier.fillMaxWidth().height(320.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0B2920))
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        FieldMapCanvas(
+                            modifier = Modifier.fillMaxSize(),
+                            workerCount = 7,
+                            onWorkerSelected = { worker ->
+                                selectedWorker = worker
+                            })
+
+                        FieldStatusLabel(
+                            modifier = Modifier.align(Alignment.TopStart).padding(16.dp),
+                            workerCount = 7
+                        )
+
+                        Row(
+                            modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth()
+                                .padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            DashboardStat(
+                                modifier = Modifier.weight(1f), icon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Groups,
+                                        contentDescription = null,
+                                        tint = Color(0xFF38BDF8),
+                                        modifier = Modifier.size(17.dp)
+                                    )
+                                }, value = "7", label = "Workers"
+                            )
+
+                            DashboardStat(
+                                modifier = Modifier.weight(1f), icon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Sync,
+                                        contentDescription = null,
+                                        tint = Color(0xFF4ADE80),
+                                        modifier = Modifier.size(17.dp)
+                                    )
+                                }, value = "${historyEntries.size}", label = "Synced"
+                            )
+
+                            DashboardStat(
+                                modifier = Modifier.weight(1f), icon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Sync,
+                                        contentDescription = null,
+                                        tint = Color(0xFFFACC15),
+                                        modifier = Modifier.size(17.dp)
+                                    )
+                                }, value = "$pendingCount", label = "Pending"
+                            )
+                        }
+                    }
+                }
+
+                selectedWorker?.let { worker ->
+                    SelectedWorkerCard(
+                        worker = worker, onDeselect = { selectedWorker = null })
                 }
 
                 @OptIn(ExperimentalGridApi::class) Grid(
@@ -348,8 +433,6 @@ fun MainContent(
                     }
                 }
 
-                HistoryChart(entries = historyEntries)
-
                 if (errorMessage != null) {
                     Text(
                         text = errorMessage!!,
@@ -360,7 +443,7 @@ fun MainContent(
 
                 @OptIn(ExperimentalFlexBoxApi::class) FlexBox(
                     config = {
-                        justifyContent(androidx.compose.foundation.layout.FlexJustifyContent.Center)
+                        justifyContent(FlexJustifyContent.Center)
                         gap(12.dp)
                     }, modifier = Modifier.fillMaxWidth()
                 ) {
@@ -433,6 +516,8 @@ fun MainContent(
                         }
                     }
                 }
+
+                HistoryChart(entries = historyEntries)
             }
         }
 
